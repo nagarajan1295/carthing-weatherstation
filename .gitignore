@@ -1,0 +1,7 @@
+# secrets / per-install state — never commit
+spotify.json
+weather.json
+
+# python
+__pycache__/
+*.pyc

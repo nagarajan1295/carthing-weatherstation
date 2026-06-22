@@ -1,0 +1,15 @@
+[Unit]
+Description=Car Thing Weather Station API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Change User to whoever owns /opt/weatherstation (must be able to read spotify.json).
+User=pi
+ExecStart=/usr/bin/python3 /opt/weatherstation/weather_api.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
