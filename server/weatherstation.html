@@ -9,107 +9,112 @@
   @font-face{font-family:'Inter';font-weight:500;font-display:swap;src:url('/assets/inter-500.woff2') format('woff2');}
   @font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url('/assets/inter-600.woff2') format('woff2');}
   @font-face{font-family:'Inter';font-weight:700;font-display:swap;src:url('/assets/inter-700.woff2') format('woff2');}
-  :root{--bg:#000;--card:rgba(255,255,255,.07);--card2:rgba(255,255,255,.12);
-    --fg:#f5f5f7;--sec:#86868b;--hair:rgba(255,255,255,.10);--green:#30d158;--ts:1;}
+  :root{--bg:#000;--card:rgba(255,255,255,.08);--card2:rgba(255,255,255,.14);
+    --fg:#f5f5f7;--sec:#9a9aa0;--hair:rgba(255,255,255,.10);--green:#30d158;--ts:1;}
   body.light{--bg:#f2f2f7;--card:rgba(0,0,0,.05);--card2:rgba(0,0,0,.12);
-    --fg:#1c1c1e;--sec:#8a8a8e;--hair:rgba(0,0,0,.10);--green:#28a745;}
+    --fg:#1c1c1e;--sec:#6e6e73;--hair:rgba(0,0,0,.10);--green:#28a745;}
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{width:800px;height:480px;overflow:hidden;background:var(--bg);color:var(--fg);
     font-family:'Inter',-apple-system,system-ui,"Helvetica Neue",sans-serif;
     -webkit-font-smoothing:antialiased;user-select:none;cursor:none;letter-spacing:-.01em;}
-  #app{display:grid;grid-template-rows:42px 322px 116px;width:800px;height:480px;}
-  /* pinned top bar */
-  .top{position:fixed;top:0;left:0;width:800px;height:42px;z-index:40;background:var(--bg);
-    display:flex;align-items:center;justify-content:space-between;padding:0 22px;}
-  .place{display:flex;align-items:center;gap:6px;font-size:calc(16px*var(--ts));font-weight:600;}
-  .np{display:flex;align-items:center;gap:8px;max-width:380px;overflow:hidden;
-    font-size:calc(15px*var(--ts));font-weight:500;color:var(--fg);}
-  .np #npText{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .npico{color:var(--green);font-size:calc(16px*var(--ts));}
-  .tr{color:var(--sec);font-size:calc(16px*var(--ts));font-weight:500;}
+  #app{display:grid;grid-template-rows:48px 232px 96px 62px;width:800px;height:480px;}
+  /* top bar */
+  .top{display:flex;align-items:center;justify-content:space-between;padding:0 24px;}
+  .place{display:flex;align-items:center;gap:7px;font-size:calc(21px*var(--ts));font-weight:600;
+    max-width:480px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tr{color:var(--fg);font-size:calc(21px*var(--ts));font-weight:600;}
   /* hero: clock | current conditions */
-  .hero{grid-row:2;display:flex;align-items:center;gap:8px;padding:0 26px;}
+  .hero{display:flex;align-items:center;gap:10px;padding:0 28px;}
   .clockwrap{flex:1;display:flex;flex-direction:column;justify-content:center;}
-  #clock{font-size:calc(118px*min(var(--ts),1.25));font-weight:700;line-height:.92;
+  #clock{font-size:calc(132px*min(var(--ts),1.2));font-weight:700;line-height:.9;
     letter-spacing:-.04em;font-variant-numeric:tabular-nums;}
-  #clock .ap{font-size:calc(40px*min(var(--ts),1.25));font-weight:600;color:var(--sec);margin-left:8px;letter-spacing:-.02em;}
-  #dateBig{font-size:calc(26px*min(var(--ts),1.3));font-weight:600;color:var(--sec);margin-top:14px;}
-  .cond{width:316px;display:flex;flex-direction:column;align-items:flex-end;text-align:right;}
-  .cond .top2{display:flex;align-items:center;gap:8px;}
-  .cond .ic{font-size:calc(68px*min(var(--ts),1.2));line-height:1;}
-  .cond .tmp{font-size:calc(92px*min(var(--ts),1.2));font-weight:700;letter-spacing:-.03em;line-height:1;}
-  .cond .desc{font-size:calc(24px*min(var(--ts),1.25));font-weight:600;margin-top:6px;}
-  .cond .sub{font-size:calc(17px*min(var(--ts),1.2));color:var(--sec);font-weight:500;margin-top:10px;line-height:1.6;}
+  #clock .ap{font-size:calc(44px*min(var(--ts),1.2));font-weight:600;color:var(--sec);margin-left:10px;letter-spacing:-.02em;}
+  #dateBig{font-size:calc(32px*min(var(--ts),1.2));font-weight:600;color:var(--sec);margin-top:16px;}
+  .cond{width:330px;display:flex;flex-direction:column;align-items:flex-end;text-align:right;}
+  .cond .top2{display:flex;align-items:center;gap:10px;}
+  .cond .ic{font-size:calc(76px*min(var(--ts),1.15));line-height:1;}
+  .cond .tmp{font-size:calc(104px*min(var(--ts),1.15));font-weight:700;letter-spacing:-.03em;line-height:1;}
+  .cond .desc{font-size:calc(30px*min(var(--ts),1.2));font-weight:600;margin-top:8px;}
+  .cond .sub{font-size:calc(22px*min(var(--ts),1.2));color:var(--sec);font-weight:500;margin-top:12px;line-height:1.55;}
   .cond .sub b{color:var(--fg);font-weight:600;}
   /* hourly strip */
-  .hourly{grid-row:3;display:flex;gap:8px;padding:6px 22px 16px;align-items:stretch;}
+  .hourly{display:flex;gap:9px;padding:2px 24px;align-items:stretch;}
   .hcell{flex:1;background:var(--card);border-radius:16px;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:3px;padding:8px 2px;}
-  .hcell .ht{font-size:calc(14px*var(--ts));color:var(--sec);font-weight:500;}
-  .hcell .hi{font-size:calc(22px*var(--ts));}
-  .hcell .hd{font-size:calc(17px*var(--ts));font-weight:700;}
+    align-items:center;justify-content:center;gap:3px;padding:6px 2px;}
+  .hcell .ht{font-size:calc(18px*var(--ts));color:var(--sec);font-weight:600;}
+  .hcell .hi{font-size:calc(34px*var(--ts));line-height:1;}
+  .hcell .hd{font-size:calc(26px*var(--ts));font-weight:700;}
+  /* persistent Spotify bar (always visible on home) */
+  .npbar{display:flex;align-items:center;gap:14px;margin:0 24px 10px;padding:8px 14px;
+    background:var(--card);border-radius:18px;height:54px;}
+  .npthumb{width:38px;height:38px;border-radius:9px;flex:0 0 auto;
+    background:var(--card2) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .npmeta{flex:1;min-width:0;}
+  .nptitle{font-size:calc(20px*var(--ts));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .npsub{font-size:calc(15px*var(--ts));color:var(--sec);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+  .npplay{flex:0 0 auto;background:var(--card2);border:none;color:var(--fg);font-size:24px;
+    width:54px;height:42px;border-radius:12px;font-family:inherit;}
+  .npplay:active{transform:scale(.94);}
   /* generic full-screen view */
-  .view{position:fixed;inset:0;padding-top:42px;background:var(--bg);display:flex;flex-direction:column;z-index:15;
+  .view{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:15;
     opacity:0;visibility:hidden;transform:scale(1.015);transition:opacity .26s ease,transform .26s ease,visibility .26s;}
   .view.show{opacity:1;visibility:visible;transform:none;}
-  .view .vhead{display:flex;align-items:center;gap:14px;padding:16px 24px 10px;}
-  .view .vtitle{font-size:calc(28px*var(--ts));font-weight:700;letter-spacing:-.02em;}
-  .view .vclose{margin-left:auto;font-size:16px;color:var(--sec);background:var(--card);border-radius:30px;padding:10px 18px;font-weight:500;}
-  .view .vbody{flex:1;overflow-y:auto;padding:4px 22px 22px;scroll-behavior:smooth;scrollbar-width:none;}
+  .view .vhead{display:flex;align-items:center;gap:14px;padding:18px 26px 12px;}
+  .view .vtitle{font-size:calc(30px*var(--ts));font-weight:700;letter-spacing:-.02em;}
+  .view .vclose{margin-left:auto;font-size:19px;color:var(--sec);background:var(--card);border-radius:30px;padding:11px 22px;font-weight:500;}
+  .view .vbody{flex:1;overflow-y:auto;padding:4px 24px 24px;scroll-behavior:smooth;scrollbar-width:none;}
   .view .vbody::-webkit-scrollbar{display:none;}
   /* forecast */
-  .drow{display:flex;align-items:center;gap:16px;padding:14px 8px;border-bottom:1px solid var(--hair);}
-  .drow .dw{font-size:calc(20px*var(--ts));font-weight:600;width:64px;}
-  .drow .di{font-size:calc(26px*var(--ts));width:40px;text-align:center;}
-  .drow .dr{margin-left:auto;font-size:calc(20px*var(--ts));font-weight:600;font-variant-numeric:tabular-nums;}
-  .drow .dr .lo{color:var(--sec);font-weight:500;margin-left:10px;}
-  /* spotify */
+  .drow{display:flex;align-items:center;gap:18px;padding:16px 8px;border-bottom:1px solid var(--hair);}
+  .drow .dw{font-size:calc(24px*var(--ts));font-weight:600;width:74px;}
+  .drow .di{font-size:calc(32px*var(--ts));width:46px;text-align:center;}
+  .drow .dr{margin-left:auto;font-size:calc(24px*var(--ts));font-weight:700;font-variant-numeric:tabular-nums;}
+  .drow .dr .lo{color:var(--sec);font-weight:500;margin-left:12px;}
+  /* spotify view */
   #spotify .sp{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:6px 24px 24px;text-align:center;}
-  .spArt{width:190px;height:190px;border-radius:20px;background:#1c1c1e center/cover no-repeat;box-shadow:0 10px 30px rgba(0,0,0,.5);flex:0 0 auto;}
-  .spTitle{font-size:calc(26px*min(var(--ts),1.4));font-weight:700;letter-spacing:-.02em;max-width:92%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .spArtist{font-size:calc(18px*min(var(--ts),1.3));color:var(--sec);font-weight:500;margin-top:-6px;}
-  .spBar{width:100%;max-width:420px;height:6px;background:var(--card);border-radius:3px;overflow:hidden;}
+  .spArt{width:188px;height:188px;border-radius:20px;background:#1c1c1e center/cover no-repeat;box-shadow:0 10px 30px rgba(0,0,0,.5);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:64px;}
+  .spTitle{font-size:calc(28px*min(var(--ts),1.4));font-weight:700;letter-spacing:-.02em;max-width:92%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .spArtist{font-size:calc(20px*min(var(--ts),1.3));color:var(--sec);font-weight:500;margin-top:-6px;}
+  .spBar{width:100%;max-width:430px;height:6px;background:var(--card);border-radius:3px;overflow:hidden;}
   .spFill{height:100%;width:0;background:var(--green);border-radius:3px;transition:width .9s linear;}
-  .spTimes{width:100%;max-width:420px;display:flex;justify-content:space-between;font-size:13px;color:var(--sec);font-variant-numeric:tabular-nums;margin-top:-6px;}
-  .spCtl{display:flex;align-items:center;gap:26px;margin-top:4px;}
-  .spVol{display:flex;align-items:center;gap:12px;width:100%;max-width:320px;justify-content:center;}
-  .spBtn{background:var(--card);border:none;color:var(--fg);font-size:26px;width:62px;height:54px;border-radius:14px;font-family:inherit;transition:transform .14s ease,background .2s ease;}
+  .spTimes{width:100%;max-width:430px;display:flex;justify-content:space-between;font-size:14px;color:var(--sec);font-variant-numeric:tabular-nums;margin-top:-6px;}
+  .spCtl{display:flex;align-items:center;gap:28px;margin-top:4px;}
+  .spVol{display:flex;align-items:center;gap:12px;width:100%;max-width:330px;justify-content:center;}
+  .spBtn{background:var(--card);border:none;color:var(--fg);font-size:28px;width:66px;height:58px;border-radius:14px;font-family:inherit;transition:transform .14s ease,background .2s ease;}
   .spBtn:active{transform:scale(.94);background:var(--card2);}
-  .spBtn.big{font-size:30px;width:78px;height:62px;background:var(--green);color:#000;}
-  .spBtn.sm{font-size:20px;width:50px;height:44px;}
+  .spBtn.big{font-size:32px;width:82px;height:66px;background:var(--green);color:#000;}
+  .spBtn.sm{font-size:22px;width:54px;height:46px;}
   /* settings */
-  .srow{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px 6px;border-bottom:1px solid var(--hair);}
-  .srow .sk{font-size:calc(19px*var(--ts));font-weight:600;}
+  .srow{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:18px 6px;border-bottom:1px solid var(--hair);}
+  .srow .sk{font-size:calc(21px*var(--ts));font-weight:600;}
   .seg2{display:flex;flex-wrap:wrap;background:var(--card);border-radius:12px;padding:4px;gap:4px;}
-  .seg2 button{background:transparent;color:var(--fg);border:none;font-size:calc(17px*var(--ts));font-weight:600;padding:13px 24px;border-radius:9px;font-family:inherit;}
+  .seg2 button{background:transparent;color:var(--fg);border:none;font-size:calc(19px*var(--ts));font-weight:600;padding:14px 26px;border-radius:9px;font-family:inherit;}
   .seg2 button.on{background:var(--card2);}
   .khi{outline:3px solid var(--green);outline-offset:1px;}
   .bwrap{display:flex;align-items:center;gap:10px;width:100%;}
-  .slider{flex:1;height:30px;background:var(--card);border-radius:15px;overflow:hidden;}
-  .bfill{height:100%;background:var(--green);border-radius:15px;transition:width .12s ease;}
+  .slider{flex:1;height:34px;background:var(--card);border-radius:17px;overflow:hidden;}
+  .bfill{height:100%;background:var(--green);border-radius:17px;transition:width .12s ease;}
   .slider.active{outline:3px solid #ff9f0a;outline-offset:2px;}
   .slider.active .bfill{background:#ff9f0a;}
-  .bbtn{background:var(--card2);border:none;color:var(--fg);font-size:calc(24px*var(--ts));font-weight:700;width:56px;height:46px;border-radius:11px;font-family:inherit;flex:0 0 auto;}
-  .about{font-size:16px;color:var(--sec);line-height:1.6;padding:10px 6px;}
+  .bbtn{background:var(--card2);border:none;color:var(--fg);font-size:calc(26px*var(--ts));font-weight:700;width:60px;height:50px;border-radius:12px;font-family:inherit;flex:0 0 auto;}
+  .about{font-size:18px;color:var(--sec);line-height:1.6;padding:12px 6px;}
   /* location search keyboard */
-  #loc .qbox{font-size:21px;background:var(--card);border-radius:13px;padding:11px 16px;color:var(--fg);font-weight:500;margin:0 6px 10px;}
+  #loc .qbox{font-size:23px;background:var(--card);border-radius:13px;padding:13px 18px;color:var(--fg);font-weight:500;margin:0 6px 10px;}
   #locResults{margin:0 6px 8px;}
-  #locResults .res{font-size:19px;padding:12px 14px;border-radius:12px;color:var(--fg);font-weight:500;}
+  #locResults .res{font-size:21px;padding:14px 16px;border-radius:12px;color:var(--fg);font-weight:500;}
   #locResults .res:active{background:var(--card2);}
   #kb{display:flex;flex-direction:column;gap:7px;padding:0 6px;}
   .krow{display:flex;gap:7px;justify-content:center;}
-  .key{flex:1;background:var(--card);border-radius:11px;font-size:22px;font-weight:600;color:var(--fg);padding:13px 0;text-align:center;font-family:inherit;}
+  .key{flex:1;background:var(--card);border-radius:11px;font-size:24px;font-weight:600;color:var(--fg);padding:14px 0;text-align:center;font-family:inherit;}
   .key:active{background:var(--card2);}
   .key.wide{flex:2.4;}
-  .item,.bbtn,.seg2 button,.key,.vclose,.spBtn{transition:transform .14s ease,background .2s ease;}
-  .seg2 button:active,.vclose:active,.bbtn:active{transform:scale(.97);}
+  .seg2 button:active,.vclose:active,.bbtn:active,.npbar:active{transform:scale(.98);}
 </style>
 </head>
 <body>
 <div id="app">
   <div class="top">
     <div class="place" id="place">📍 —</div>
-    <div class="np" id="np" onclick="openSpotify()" style="display:none"><span class="npico">♫</span><span id="npText"></span></div>
     <div class="tr" id="dateTop">—</div>
   </div>
   <div class="hero">
@@ -119,11 +124,16 @@
     </div>
     <div class="cond" id="cond" onclick="openView('forecast')">
       <div class="top2"><span class="ic" id="cIcon">🌡️</span><span class="tmp" id="cTemp">--°</span></div>
-      <div class="desc" id="cDesc">—</div>
+      <div class="desc" id="cDesc">Connecting…</div>
       <div class="sub" id="cSub"></div>
     </div>
   </div>
   <div class="hourly" id="hourly"></div>
+  <div class="npbar" id="npbar" onclick="openSpotify()">
+    <div class="npthumb" id="npThumb">♫</div>
+    <div class="npmeta"><div class="nptitle" id="npbTitle">Spotify</div><div class="npsub" id="npbSub">Tap to open</div></div>
+    <button class="npplay" id="npbPlay" onclick="event.stopPropagation();spCmd('playpause')">▶</button>
+  </div>
 </div>
 
 <div id="forecast" class="view">
@@ -134,7 +144,7 @@
 <div id="spotify" class="view">
   <div class="vhead"><div class="vtitle">Spotify</div><div class="vclose" onclick="closeView('spotify')">Back</div></div>
   <div class="sp">
-    <div class="spArt" id="spArt"></div>
+    <div class="spArt" id="spArt">♫</div>
     <div class="spTitle" id="spTitle">Spotify not connected</div>
     <div class="spArtist" id="spArtist"></div>
     <div class="spBar"><div class="spFill" id="spFill"></div></div>
@@ -144,7 +154,7 @@
       <button class="spBtn big" id="spPlay" onclick="spCmd('playpause')">▶</button>
       <button class="spBtn" onclick="spCmd('next')">⏭</button>
     </div>
-    <div class="spVol"><button class="spBtn sm" onclick="spVol(-10)">🔉</button><div class="slider" style="max-width:240px;height:30px"><div class="bfill" id="spVolFill"></div></div><button class="spBtn sm" onclick="spVol(10)">🔊</button></div>
+    <div class="spVol"><button class="spBtn sm" onclick="spVol(-10)">🔉</button><div class="slider" style="max-width:240px;height:34px"><div class="bfill" id="spVolFill"></div></div><button class="spBtn sm" onclick="spVol(10)">🔊</button></div>
     <div class="about" id="spHint" style="text-align:center;padding-top:0"></div>
   </div>
 </div>
@@ -168,11 +178,11 @@
     <div class="srow"><span class="sk">Music</span>
       <div class="seg2"><button onclick="openSpotify()">Open Spotify</button></div></div>
     <div class="srow"><span class="sk">Text size</span>
-      <div class="seg2"><button onclick="setTs(0.9)" data-ts="0.9">Small</button><button onclick="setTs(1)" data-ts="1">Medium</button><button onclick="setTs(1.15)" data-ts="1.15">Large</button><button onclick="setTs(1.4)" data-ts="1.4">XL</button></div></div>
+      <div class="seg2"><button onclick="setTs(0.9)" data-ts="0.9">Small</button><button onclick="setTs(1)" data-ts="1">Medium</button><button onclick="setTs(1.15)" data-ts="1.15">Large</button><button onclick="setTs(1.35)" data-ts="1.35">XL</button></div></div>
     <div class="srow"><span class="sk">Appearance</span>
       <div class="seg2"><button onclick="setTheme('dark')" data-th="dark">Dark</button><button onclick="setTheme('light')" data-th="light">Light</button></div></div>
     <div class="srow"><span class="sk">Brightness <span id="bpct" style="color:var(--sec);font-weight:400"></span></span>
-      <div class="bwrap"><button class="bbtn" id="bAuto" style="width:auto;padding:13px 14px" onclick="setAuto(!brightAuto)">Auto</button><button class="bbtn" onclick="brightStep(-10)">−</button>
+      <div class="bwrap"><button class="bbtn" id="bAuto" style="width:auto;padding:14px 16px" onclick="setAuto(!brightAuto)">Auto</button><button class="bbtn" onclick="brightStep(-10)">−</button>
         <div class="slider" id="bbar" onclick="brightTap(event)"><div class="bfill" id="bfill"></div></div>
         <button class="bbtn" onclick="brightStep(10)">+</button></div></div>
     <div class="about" id="about"></div>
@@ -180,28 +190,28 @@
 </div>
 
 <script>
-const VERSION="1.0";
+const VERSION="1.1";
 const CT="http://127.0.0.1:8091";   // Car Thing-side brightness/display control server
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 let dispOff=false;
 function toggleDisplay(){dispOff=!dispOff;fetch(CT+"/display?on="+(dispOff?0:1)).catch(()=>{});}
-// ---- Pi-authoritative clock (Car Thing has no RTC/NTP) ----
-let srvOffMs=null,tzOffMin=-(new Date().getTimezoneOffset());
-function setSrvTime(nowMs,tzoff){if(nowMs)srvOffMs=nowMs-Date.now();if(typeof tzoff==='number')tzOffMin=tzoff;}
+// ---- Pi-authoritative clock (Car Thing has no RTC/NTP — never trust the browser clock) ----
+let srvOffMs=null,tzOffMin=-(new Date().getTimezoneOffset()),haveTime=false;
+function setSrvTime(nowMs,tzoff){if(nowMs){srvOffMs=nowMs-Date.now();haveTime=true;}if(typeof tzoff==='number')tzOffMin=tzoff;}
 function tick(){
-  const base=(srvOffMs!=null?Date.now()+srvOffMs:Date.now())+tzOffMin*60000;
+  if(!haveTime){document.getElementById('clock').innerHTML='--:--';document.getElementById('dateBig').textContent='Syncing…';return;}
+  const base=Date.now()+srvOffMs+tzOffMin*60000;
   const d=new Date(base);
   let h=d.getUTCHours();const ap=h<12?'AM':'PM';const hh=(h%12)||12;
   document.getElementById('clock').innerHTML=hh+':'+String(d.getUTCMinutes()).padStart(2,'0')+'<span class="ap">'+ap+'</span>';
   const ds=DAYS[d.getUTCDay()]+', '+MON[d.getUTCMonth()]+' '+d.getUTCDate();
-  document.getElementById('dateBig').textContent=ds;
-  document.getElementById('dateTop').textContent=ds;
+  document.getElementById('dateBig').textContent=ds;document.getElementById('dateTop').textContent=ds;
   autoApply();
 }
 setInterval(tick,1000);tick();
-async function syncTime(){try{const t=await (await fetch('/api/time',{cache:'no-store'})).json();setSrvTime(t.now,t.tzoff);}catch(e){}}
-syncTime();setInterval(syncTime,60000);
+async function syncTime(){try{const t=await (await fetch('/api/time',{cache:'no-store'})).json();setSrvTime(t.now,t.tzoff);tick();}catch(e){}}
+syncTime();setInterval(syncTime,30000);
 
 // ---- Weather ----
 let unit='C';
@@ -213,32 +223,41 @@ async function fetchWeather(){
     document.getElementById('place').textContent='📍 '+(w.place||'—');
     document.getElementById('cIcon').textContent=w.icon||'🌡️';
     document.getElementById('cTemp').textContent=(w.temp==null?'--':w.temp)+'°';
-    document.getElementById('cDesc').textContent=w.desc||'—';
-    document.getElementById('cSub').innerHTML = w.temp==null ? 'Weather unavailable' :
+    document.getElementById('cDesc').textContent=w.temp==null?'Weather unavailable':(w.desc||'—');
+    document.getElementById('cSub').innerHTML = w.temp==null ? '' :
       ('Feels <b>'+w.feels+'°</b> · H:<b>'+w.hi+'°</b> L:<b>'+w.lo+'°</b><br>💧 '+w.humidity+'%  ·  💨 '+w.wind+' '+w.wind_unit);
     const H=document.getElementById('hourly');H.innerHTML='';
-    (w.hourly||[]).slice(0,8).forEach(h=>{const c=document.createElement('div');c.className='hcell';
+    (w.hourly||[]).slice(0,7).forEach(h=>{const c=document.createElement('div');c.className='hcell';
       c.innerHTML='<div class="ht">'+hr12(h.t)+'</div><div class="hi">'+h.icon+'</div><div class="hd">'+h.temp+'°</div>';H.appendChild(c);});
     renderForecast(w.daily||[]);
-  }catch(e){}
+  }catch(e){document.getElementById('cDesc').textContent='Connecting…';}
 }
-fetchWeather();setInterval(fetchWeather,300000);
+fetchWeather();setInterval(fetchWeather,180000);
 function hr12(t){let h=parseInt((t||'0:0').split(':')[0]);const ap=h<12?'a':'p';h=h%12;if(h===0)h=12;return h+ap;}
 function renderForecast(daily){
   const b=document.getElementById('fcBody');if(!daily.length){b.innerHTML='<div class="about">No forecast.</div>';return;}
   b.innerHTML=daily.map((d,i)=>`<div class="drow"><div class="dw">${i===0?'Today':d.dow}</div><div class="di">${d.icon}</div><div class="dr">${d.hi}°<span class="lo">${d.lo}°</span></div></div>`).join('');
 }
 
-// ---- Spotify (now playing + transport via /api/spotify*) ----
+// ---- Spotify (always-visible bar + full view; via /api/spotify*) ----
 let spState={};
 function fmtT(ms){if(!ms||ms<0)ms=0;const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function spOpen(){return document.getElementById('spotify').classList.contains('show');}
 function openSpotify(){openView('spotify');renderSpotify(spState);}
-function renderNp(s){const np=document.getElementById('np');
-  if(s&&s.title){document.getElementById('npText').textContent=s.title+(s.artist?' — '+s.artist:'');np.style.display='flex';}
-  else np.style.display='none';}
+function renderNp(s){
+  const thumb=document.getElementById('npThumb'),title=document.getElementById('npbTitle'),
+        sub=document.getElementById('npbSub'),play=document.getElementById('npbPlay');
+  if(s&&s.title){
+    if(s.art){thumb.style.backgroundImage=`url('${s.art}')`;thumb.textContent='';}else{thumb.style.backgroundImage='none';thumb.textContent='♫';}
+    title.textContent=s.title;sub.textContent=s.artist||'';play.textContent=s.playing?'⏸':'▶';play.style.display='';
+  }else{
+    thumb.style.backgroundImage='none';thumb.textContent='♫';title.textContent='Spotify';
+    sub.textContent=(s&&s.available)?'Nothing playing · tap to open':'Tap to open';play.style.display='none';
+  }
+}
 function renderSpotify(s){s=s||{};
-  document.getElementById('spArt').style.backgroundImage=s.art?`url('${s.art}')`:'none';
+  const art=document.getElementById('spArt');
+  if(s.art){art.style.backgroundImage=`url('${s.art}')`;art.textContent='';}else{art.style.backgroundImage='none';art.textContent='♫';}
   document.getElementById('spTitle').textContent=s.title||(s.available?'Nothing playing':'Spotify not connected');
   document.getElementById('spArtist').textContent=s.artist||'';
   const dur=s.dur_ms||0,pos=s.pos_ms||0;
@@ -246,7 +265,8 @@ function renderSpotify(s){s=s||{};
   document.getElementById('spPos').textContent=fmtT(pos);document.getElementById('spDur').textContent=fmtT(dur);
   document.getElementById('spPlay').textContent=s.playing?'⏸':'▶';
   const vf=document.getElementById('spVolFill');if(vf)vf.style.width=(s.volume==null?50:s.volume)+'%';
-  const hint=document.getElementById('spHint');if(hint)hint.textContent=s.available?'':'Open Spotify on your phone/Alexa and pick a device to play.';}
+  const hint=document.getElementById('spHint');if(hint)hint.textContent=s.available?'':'Open Spotify on your phone/Alexa and pick a device to play.';
+}
 function spCmd(c){fetch('/api/spotify/cmd?c='+c).then(()=>setTimeout(pollSpotify,200)).catch(()=>{});}
 function spVol(d){const v=Math.max(0,Math.min(100,(spState&&spState.volume!=null?spState.volume:50)+d));
   if(spState)spState.volume=v;const vf=document.getElementById('spVolFill');if(vf)vf.style.width=v+'%';
@@ -288,10 +308,11 @@ document.addEventListener('keydown',(ev)=>{
     else if(k==='Escape'||k==='Backspace')closeView('settings');return;}
   if(v){
     const body=document.querySelector('#'+v+' .vbody');
-    if(k==='ArrowDown'||k==='ArrowRight'){if(body)body.scrollBy({top:110,behavior:'smooth'});}
-    else if(k==='ArrowUp'||k==='ArrowLeft'){if(body)body.scrollBy({top:-110,behavior:'smooth'});}
+    if(k==='ArrowDown'||k==='ArrowRight'){if(body)body.scrollBy({top:120,behavior:'smooth'});}
+    else if(k==='ArrowUp'||k==='ArrowLeft'){if(body)body.scrollBy({top:-120,behavior:'smooth'});}
     else if(k==='Escape'||k==='Backspace')closeView(v);return;}
-  if(k==='Enter')openView('forecast');
+  if(k==='Enter')openSpotify();
+  else if(k==='ArrowRight'||k==='ArrowDown')openView('forecast');
 });
 
 // ---- Location search ----
@@ -340,9 +361,8 @@ function manualBright(v){brightAuto=false;localStorage.setItem('brightAuto','0')
 function brightStep(d){manualBright(brightPct+d);}
 function brightTap(e){const r=document.getElementById('bbar').getBoundingClientRect();manualBright(Math.round((e.clientX-r.left)/r.width*100));}
 function autoLevel(h){if(h>=8&&h<19)return 100;if(h>=6&&h<8)return 75;if(h>=19&&h<22)return 55;return 20;}
-function autoApply(force){if(!brightAuto)return;
-  const base=(srvOffMs!=null?Date.now()+srvOffMs:Date.now())+tzOffMin*60000;
-  const lvl=autoLevel(new Date(base).getUTCHours());
+function autoApply(force){if(!brightAuto||!haveTime)return;
+  const lvl=autoLevel(new Date(Date.now()+srvOffMs+tzOffMin*60000).getUTCHours());
   if(force||lvl!==_lastAutoLvl){_lastAutoLvl=lvl;brightPct=lvl;applyBright();}}
 function setAuto(on){brightAuto=on;localStorage.setItem('brightAuto',on?'1':'0');markBrightAuto();if(on)autoApply(true);}
 function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classList.toggle('on',brightAuto);}
