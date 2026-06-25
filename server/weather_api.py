@@ -56,11 +56,38 @@ def tz_off_min():
 def _wmo(code):
     return WMO.get(int(code), ("\U0001f321️", "—"))
 
+# Indoor temperature from a BMP280 on the Pi's I2C bus 1 @ 0x77.
+_bmp = {"bus": None, "cal": None}
+def _read_indoor_c():
+    try:
+        import smbus, struct
+        a = 0x77
+        if _bmp["bus"] is None:
+            b = smbus.SMBus(1)
+            cal = b.read_i2c_block_data(a, 0x88, 6)
+            T1 = cal[0] | (cal[1] << 8)
+            T2 = struct.unpack("<h", bytes(cal[2:4]))[0]
+            T3 = struct.unpack("<h", bytes(cal[4:6]))[0]
+            b.write_byte_data(a, 0xF4, 0x27)   # temp+press oversample x1, normal mode
+            _bmp["bus"], _bmp["cal"] = b, (T1, T2, T3)
+        b = _bmp["bus"]; T1, T2, T3 = _bmp["cal"]
+        d = b.read_i2c_block_data(a, 0xFA, 3)
+        adc = (d[0] << 12) | (d[1] << 4) | (d[2] >> 4)
+        v1 = (adc / 16384.0 - T1 / 1024.0) * T2
+        v2 = ((adc / 131072.0 - T1 / 8192.0) ** 2) * T3
+        return (v1 + v2) / 5120.0
+    except Exception:
+        _bmp["bus"] = None
+        return None
+
 def weather():
     c = load_wconf()
     imperial = c["unit"] == "F"
     base = {"unit": c["unit"], "place": c["place"],
             "now": int(time.time() * 1000), "tzoff": tz_off_min()}
+    ind = _read_indoor_c()
+    if ind is not None:
+        base["indoor"] = round(ind * 9 / 5 + 32) if imperial else round(ind)
     try:
         url = ("https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s"
                "&current=temperature_2m,apparent_temperature,relative_humidity_2m,"
