@@ -171,6 +171,37 @@ def _sp_api(method, path, timeout=8):
     except Exception:
         return None, 0
 
+_ctx_cache = {}
+def _context_name(ctx):
+    if not ctx:
+        return None
+    uri = ctx.get("uri") or ""
+    if uri in _ctx_cache:
+        return _ctx_cache[uri]
+    typ = ctx.get("type"); cid = uri.split(":")[-1] if uri else ""
+    name = None
+    try:
+        if typ == "playlist" and cid:
+            d, _ = _sp_api("GET", "/playlists/%s?fields=name" % cid); name = (d or {}).get("name")
+        elif typ == "album" and cid:
+            d, _ = _sp_api("GET", "/albums/%s" % cid); name = (d or {}).get("name")
+        elif typ == "artist" and cid:
+            d, _ = _sp_api("GET", "/artists/%s" % cid); name = (d or {}).get("name")
+    except Exception:
+        pass
+    _ctx_cache[uri] = name
+    return name
+
+def _is_liked(tid):
+    if not tid:
+        return False
+    if _sp.get("liked_id") == tid:
+        return _sp.get("liked", False)
+    d, c = _sp_api("GET", "/me/tracks/contains?ids=" + tid)
+    liked = bool(d and d[0]) if (c == 200 and isinstance(d, list)) else False
+    _sp["liked_id"] = tid; _sp["liked"] = liked
+    return liked
+
 def spotify_status():
     if not _sp_conf():
         return {"available": False, "err": "not-configured"}
@@ -178,15 +209,24 @@ def spotify_status():
     if code == 401:
         return {"available": False, "err": "auth"}
     if code == 204 or not data:
-        return {"available": True, "playing": False}
+        cp, c2 = _sp_api("GET", "/me/player/currently-playing")   # fallback when no "active" device
+        if c2 == 200 and cp and cp.get("item"):
+            data = cp
+        else:
+            return {"available": True, "playing": False}
     item = data.get("item") or {}
     imgs = (item.get("album") or {}).get("images") or []
     dev = data.get("device") or {}
+    tid = item.get("id")
     _sp["playing"] = bool(data.get("is_playing"))
+    _sp["shuffle"] = bool(data.get("shuffle_state"))
+    _sp["track_id"] = tid
     return {"available": True, "playing": _sp["playing"],
             "title": item.get("name"),
             "artist": ", ".join(a["name"] for a in item.get("artists", [])) or None,
             "album": (item.get("album") or {}).get("name"),
+            "context": _context_name(data.get("context")),
+            "shuffle": _sp["shuffle"], "liked": _is_liked(tid),
             "art": imgs[0]["url"] if imgs else None,
             "dur_ms": item.get("duration_ms") or 0,
             "pos_ms": data.get("progress_ms") or 0,
@@ -195,6 +235,20 @@ def spotify_status():
 def spotify_cmd(c):
     if c == "playpause":
         c = "pause" if _sp["playing"] else "play"
+    if c == "shuffle":
+        ns = "false" if _sp.get("shuffle") else "true"
+        _, code = _sp_api("PUT", "/me/player/shuffle?state=" + ns)
+        _sp["shuffle"] = (ns == "true")
+        return {"ok": code in (200, 202, 204), "code": code}
+    if c == "like":
+        tid = _sp.get("track_id")
+        if not tid:
+            return {"ok": False, "err": "no-track"}
+        if _sp.get("liked"):
+            _, code = _sp_api("DELETE", "/me/tracks?ids=" + tid); _sp["liked"] = False
+        else:
+            _, code = _sp_api("PUT", "/me/tracks?ids=" + tid); _sp["liked"] = True
+        return {"ok": code in (200, 202, 204), "code": code}
     routes = {"play": ("PUT", "/me/player/play"), "pause": ("PUT", "/me/player/pause"),
               "next": ("POST", "/me/player/next"), "prev": ("POST", "/me/player/previous"),
               "previous": ("POST", "/me/player/previous")}
@@ -205,6 +259,30 @@ def spotify_cmd(c):
     if c in ("play", "pause"):
         _sp["playing"] = (c == "play")
     return {"ok": code in (200, 202, 204), "code": code}
+
+def spotify_debug():
+    out = {}
+    t = _sp_token()
+    out["have_token"] = bool(t)
+    if t:
+        try:
+            r = urllib.request.urlopen(urllib.request.Request("https://api.spotify.com/v1/me",
+                headers={"Authorization": "Bearer " + t}), timeout=8)
+            out["me_raw"] = {"code": r.status, "body": r.read()[:400].decode()}
+        except urllib.error.HTTPError as e:
+            out["me_raw"] = {"code": e.code, "body": e.read()[:400].decode()}
+        except Exception as e:
+            out["me_raw"] = {"err": str(e)}
+    me, c = _sp_api("GET", "/me")
+    out["account"] = {"code": c, "name": (me or {}).get("display_name"), "product": (me or {}).get("product")}
+    dv, c = _sp_api("GET", "/me/devices")
+    out["devices"] = {"code": c, "list": [{"name": x.get("name"), "active": x.get("is_active"),
+        "type": x.get("type")} for x in (dv or {}).get("devices", [])]}
+    pl, c = _sp_api("GET", "/me/player")
+    out["player_code"] = c
+    cp, c = _sp_api("GET", "/me/player/currently-playing")
+    out["currently_playing"] = {"code": c, "track": ((cp or {}).get("item") or {}).get("name")}
+    return out
 
 def spotify_vol(v):
     try: v = max(0, min(100, int(v)))
@@ -255,6 +333,8 @@ class H(BaseHTTPRequestHandler):
             self._json(spotify_cmd(_qs(p).get("c", [""])[0]))
         elif p.startswith("/api/spotify/vol"):
             self._json(spotify_vol(_qs(p).get("v", ["50"])[0]))
+        elif p.startswith("/api/spotify/debug"):
+            self._json(spotify_debug())
         elif p.startswith("/api/spotify"):
             self._json(spotify_status())
         elif p.startswith("/assets/"):
