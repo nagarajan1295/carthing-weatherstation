@@ -9,151 +9,108 @@
   @font-face{font-family:'Inter';font-weight:500;font-display:swap;src:url('/assets/inter-500.woff2') format('woff2');}
   @font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url('/assets/inter-600.woff2') format('woff2');}
   @font-face{font-family:'Inter';font-weight:700;font-display:swap;src:url('/assets/inter-700.woff2') format('woff2');}
-  :root{--bg:#000;--card:rgba(255,255,255,.09);--card2:rgba(255,255,255,.16);
-    --fg:#ffffff;--sec:#a6a6ad;--hair:rgba(255,255,255,.12);--green:#1db954;}
-  body.light{--bg:#f2f2f7;--card:rgba(0,0,0,.06);--card2:rgba(0,0,0,.14);
-    --fg:#0c0c0e;--sec:#6e6e73;--hair:rgba(0,0,0,.12);--green:#1db954;}
+  :root{--bg:#08080a;--fg:#f4f4f6;--sec:#76767e;--dim:#4a4a52;
+    --hair:rgba(255,255,255,.08);--card:rgba(255,255,255,.045);--accent:#54c7ff;}
+  body.light{--bg:#f6f6f7;--fg:#101013;--sec:#86868c;--dim:#b0b0b6;
+    --hair:rgba(0,0,0,.09);--card:rgba(0,0,0,.04);--accent:#0a84ff;}
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{width:800px;height:480px;overflow:hidden;background:var(--bg);color:var(--fg);
     font-family:'Inter',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
-    user-select:none;cursor:none;letter-spacing:-.01em;}
-  /* ---- PINNED top bar: temp + time, on every view ---- */
-  #top{position:fixed;top:0;left:0;width:800px;height:58px;z-index:50;background:var(--bg);
-    display:flex;align-items:center;justify-content:space-between;padding:0 26px;
-    border-bottom:1px solid var(--hair);}
-  #top .twx{display:flex;align-items:baseline;gap:11px;}
-  #top #tIcon{font-size:34px;}
-  #top #tTemp{font-size:36px;font-weight:700;}
-  #top .tdesc{font-size:24px;color:var(--sec);font-weight:500;}
-  #top .ttime{display:flex;align-items:baseline;gap:22px;}
-  #top .tdate{font-size:24px;color:var(--sec);font-weight:600;}
-  #top #tClock{font-size:38px;font-weight:700;font-variant-numeric:tabular-nums;}
-  #top #tAp{font-size:22px;color:var(--sec);font-weight:600;margin-left:-8px;}
-  body:not(.ovl) #top .ttime{visibility:hidden;}   /* home has the big clock — no duplicate time up top */
-  /* ---- HOME ---- */
-  #home{position:absolute;inset:0;padding-top:58px;display:flex;flex-direction:column;}
-  .hmain{flex:1;min-height:0;display:flex;align-items:center;padding:0 48px;gap:40px;}
-  .hclockwrap{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
-  #hClock{font-size:156px;font-weight:700;line-height:.9;letter-spacing:-6px;font-variant-numeric:tabular-nums;white-space:nowrap;}
-  #hClock .ap{font-size:50px;color:var(--sec);font-weight:600;margin-left:12px;letter-spacing:-1px;}
-  #hDate{font-size:34px;font-weight:600;color:var(--sec);margin-top:16px;}
-  #hPlace{font-size:24px;font-weight:500;color:var(--sec);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .hwx{width:296px;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;text-align:right;}
-  .hwx-top{display:flex;align-items:center;gap:10px;}
-  .hwx-icon{font-size:66px;line-height:1;}
-  .hwx-temp{font-size:104px;font-weight:700;letter-spacing:-4px;line-height:1;}
-  .hwx-desc{font-size:32px;font-weight:600;margin-top:6px;}
-  .hwx-sub{font-size:24px;color:var(--sec);font-weight:500;margin-top:14px;}
-  .hwx-sub b{color:var(--fg);font-weight:600;}
-  .hwx-indoor{font-size:38px;font-weight:600;color:var(--fg);margin-top:22px;}
-  .hwx-indoor b{color:var(--green);font-weight:700;}
-  .hourly{flex:0 0 auto;display:flex;gap:14px;padding:6px 40px 16px;}
-  .hcell{flex:1;background:var(--card);border-radius:18px;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:4px;padding:10px 2px;}
-  .hcell .ht{font-size:20px;color:var(--sec);font-weight:600;}
-  .hcell .hi{font-size:36px;line-height:1;}
-  .hcell .hd{font-size:28px;font-weight:700;}
-  /* ---- now-playing strip (home) ---- */
-  .npbar{flex:0 0 auto;display:flex;align-items:center;gap:16px;margin:0 40px 14px;padding:9px 18px;
-    background:var(--card);border-radius:18px;height:58px;}
-  .npthumb{width:44px;height:44px;border-radius:10px;flex:0 0 auto;background:var(--card2) center/cover no-repeat;
-    display:flex;align-items:center;justify-content:center;font-size:24px;}
-  .npmeta{flex:1;min-width:0;}
-  .nptitle{font-size:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .npsub{font-size:18px;color:var(--sec);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .npbtn{flex:0 0 auto;background:var(--card2);border:none;color:var(--fg);font-size:28px;
-    width:64px;height:46px;border-radius:13px;font-family:inherit;}
-  /* ---- full-screen views ---- */
-  .view{position:fixed;inset:0;padding-top:58px;background:var(--bg);z-index:30;
-    opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s;}
+    user-select:none;cursor:none;letter-spacing:-.01em;transition:background .5s ease,color .5s ease;}
+  svg{display:block;}
+  .lbl{font-size:15px;font-weight:600;letter-spacing:2.5px;color:var(--sec);text-transform:uppercase;}
+  /* pinned top bar */
+  #top{position:fixed;top:0;left:0;width:800px;height:54px;z-index:50;background:var(--bg);
+    display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid var(--hair);}
+  #top .place{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--fg);}
+  #top .place svg{width:17px;height:17px;color:var(--sec);}
+  #top .ttime{display:flex;align-items:baseline;gap:18px;}
+  #top .tdate{font-size:20px;color:var(--sec);font-weight:600;letter-spacing:.5px;}
+  #top #tClock{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;}
+  #top #tAp{font-size:16px;color:var(--sec);font-weight:600;margin-left:-10px;}
+  body:not(.ovl) #top .ttime{visibility:hidden;}
+  /* HOME */
+  #home{position:absolute;inset:0;padding-top:54px;display:flex;flex-direction:column;}
+  .hmain{flex:1;min-height:0;display:flex;align-items:center;padding:0 34px;gap:24px;}
+  .hclock{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+  #hClock{font-size:150px;font-weight:600;line-height:.9;letter-spacing:-6px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  #hClock .ap{font-size:46px;color:var(--sec);font-weight:500;margin-left:12px;letter-spacing:-1px;}
+  #hDate{font-size:23px;font-weight:600;letter-spacing:2px;color:var(--sec);text-transform:uppercase;margin-top:16px;}
+  #hPlace{display:flex;align-items:center;gap:7px;font-size:18px;font-weight:500;color:var(--sec);margin-top:7px;}
+  #hPlace svg{width:16px;height:16px;}
+  .hwx{width:300px;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;text-align:right;}
+  .hwx-top{display:flex;align-items:center;gap:14px;}
+  .hwx-top .ic{font-size:78px;color:var(--fg);}
+  .hwx-temp{font-size:94px;font-weight:600;letter-spacing:-4px;line-height:1;}
+  .hwx-desc{font-size:25px;font-weight:500;color:var(--fg);margin-top:6px;}
+  .hwx-hl{font-size:19px;font-weight:600;color:var(--sec);margin-top:10px;letter-spacing:1px;font-variant-numeric:tabular-nums;}
+  .hwx-hl b{color:var(--fg);}
+  .hwx-indoor{display:flex;align-items:baseline;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid var(--hair);width:100%;justify-content:flex-end;}
+  .hwx-indoor .v{font-size:34px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;}
+  .hourly{flex:0 0 auto;display:flex;gap:1px;padding:0 28px 16px;}
+  .hcell{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px 2px;}
+  .hcell .ht{font-size:15px;color:var(--sec);font-weight:600;letter-spacing:.5px;}
+  .hcell .ic{font-size:32px;color:var(--fg);}
+  .hcell .hd{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;}
+  /* views */
+  .view{position:fixed;inset:0;padding-top:54px;background:var(--bg);z-index:30;
+    opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s;}
   .view.show{opacity:1;visibility:visible;}
-  .vclose{position:absolute;top:68px;right:24px;z-index:5;font-size:22px;color:var(--sec);
-    background:var(--card);border-radius:30px;padding:10px 22px;font-weight:600;}
-  /* ---- SPOTIFY view (real Car Thing-style player) ---- */
-  #spotify{background:#101012;}
-  .spbg{position:absolute;inset:0;background:#101012 center/cover no-repeat;filter:blur(44px) brightness(.5);transform:scale(1.25);z-index:0;transition:background-image .5s ease;}
-  .spcontent{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;padding:22px 46px 16px;}
-  .sptop{flex:1;min-height:0;display:flex;align-items:center;gap:38px;}
-  .spArt{width:228px;height:228px;flex:0 0 auto;border-radius:14px;background:#000 center/cover no-repeat;
-    box-shadow:0 14px 44px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:84px;color:rgba(255,255,255,.45);}
-  .spInfo{flex:1;min-width:0;}
-  .spCtx{font-size:22px;color:rgba(255,255,255,.8);font-weight:600;margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .spTitle{font-size:54px;font-weight:700;color:#fff;letter-spacing:-1.5px;line-height:1.04;max-height:2.1em;overflow:hidden;}
-  .spArtist{font-size:30px;color:rgba(255,255,255,.78);font-weight:500;margin-top:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .spBarWrap{flex:0 0 auto;margin:8px 2px 4px;}
-  .spBar{height:7px;background:rgba(255,255,255,.3);border-radius:4px;overflow:hidden;}
-  .spFill{height:100%;width:0;background:#fff;border-radius:4px;transition:width .9s linear;}
-  .spTimes{display:flex;justify-content:space-between;font-size:16px;color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums;margin-top:7px;}
-  .spCtl{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:42px;margin-top:8px;}
-  .spBtn{background:none;border:none;color:#fff;font-family:inherit;width:74px;height:74px;
-    display:flex;align-items:center;justify-content:center;transition:transform .12s;padding:0;}
-  .spBtn:active{transform:scale(.86);}
-  .spBtn svg{width:46px;height:46px;}
-  .spBtn.big{background:#fff;border-radius:50%;}
-  .spBtn.big svg{width:40px;height:40px;color:#000;}
-  .spBtn.ic{color:rgba(255,255,255,.78);}
-  .spBtn.ic svg{width:34px;height:34px;}
-  .spBtn.ic.on{color:var(--green);}
-  .spHint{flex:0 0 auto;text-align:center;font-size:18px;color:rgba(255,255,255,.55);font-weight:500;margin-top:12px;min-height:22px;}
-  .vclose.light-on-art{color:#fff;background:rgba(255,255,255,.18);}
-  /* ---- forecast ---- */
-  #forecast .vbody{height:100%;overflow-y:auto;padding:8px 30px 24px;scrollbar-width:none;}
-  #forecast .vbody::-webkit-scrollbar{display:none;}
-  .drow{display:flex;align-items:center;gap:20px;padding:15px 6px;border-bottom:1px solid var(--hair);}
-  .drow .dw{font-size:28px;font-weight:600;width:120px;}
-  .drow .di{font-size:40px;width:54px;text-align:center;}
-  .drow .dr{margin-left:auto;font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;}
-  .drow .dr .lo{color:var(--sec);font-weight:500;margin-left:14px;}
-  .vtitle{font-size:30px;font-weight:700;padding:14px 30px 6px;}
-  /* ---- settings ---- */
-  #settings .vbody{height:100%;overflow-y:auto;padding:6px 30px 24px;scrollbar-width:none;}
-  #settings .vbody::-webkit-scrollbar{display:none;}
-  .srow{display:flex;flex-direction:column;gap:12px;padding:18px 4px;border-bottom:1px solid var(--hair);}
-  .srow .sk{font-size:25px;font-weight:600;}
-  .seg{display:flex;flex-wrap:wrap;background:var(--card);border-radius:14px;padding:5px;gap:5px;}
-  .seg button{background:none;color:var(--fg);border:none;font-size:23px;font-weight:600;
-    padding:14px 30px;border-radius:10px;font-family:inherit;}
-  .seg button.on{background:var(--card2);}
-  .khi{outline:3px solid var(--green);outline-offset:2px;}
-  .bwrap{display:flex;align-items:center;gap:12px;}
-  .bbtn{background:var(--card2);border:none;color:var(--fg);font-size:30px;font-weight:700;
-    width:64px;height:56px;border-radius:13px;font-family:inherit;flex:0 0 auto;}
-  .slider{flex:1;height:40px;background:var(--card);border-radius:20px;overflow:hidden;}
-  .bfill{height:100%;width:70%;background:var(--green);border-radius:20px;transition:width .12s ease;}
-  .slider.active{outline:3px solid #ff9f0a;outline-offset:3px;}
+  .vclose{position:absolute;top:64px;right:26px;z-index:5;font-size:16px;font-weight:600;letter-spacing:1px;
+    text-transform:uppercase;color:var(--sec);background:var(--card);border-radius:10px;padding:11px 20px;}
+  .vtitle{font-size:18px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--sec);padding:18px 34px 8px;}
+  .vbody{height:calc(100% - 54px);overflow-y:auto;padding:4px 34px 24px;scrollbar-width:none;}
+  .vbody::-webkit-scrollbar{display:none;}
+  .drow{display:flex;align-items:center;gap:22px;padding:15px 4px;border-bottom:1px solid var(--hair);}
+  .drow .dw{font-size:22px;font-weight:600;letter-spacing:1px;text-transform:uppercase;width:120px;color:var(--fg);}
+  .drow .di{font-size:34px;color:var(--fg);}
+  .drow .dr{margin-left:auto;font-size:25px;font-weight:600;font-variant-numeric:tabular-nums;}
+  .drow .dr .lo{color:var(--sec);margin-left:16px;}
+  /* settings */
+  .srow{display:flex;flex-direction:column;gap:14px;padding:20px 2px;border-bottom:1px solid var(--hair);}
+  .seg{display:flex;background:var(--card);border-radius:13px;padding:5px;gap:5px;width:max-content;}
+  .seg button{background:none;color:var(--fg);border:none;font-size:21px;font-weight:600;
+    padding:13px 30px;border-radius:9px;font-family:inherit;}
+  .seg button.on{background:var(--accent);color:#fff;}
+  .khi{outline:2px solid var(--accent);outline-offset:3px;}
+  .bwrap{display:flex;align-items:center;gap:14px;}
+  .bbtn{background:var(--card);border:none;color:var(--fg);font-size:28px;font-weight:600;
+    width:60px;height:54px;border-radius:12px;font-family:inherit;flex:0 0 auto;}
+  .slider{flex:1;height:36px;background:var(--card);border-radius:10px;overflow:hidden;}
+  .bfill{height:100%;width:70%;background:var(--fg);border-radius:10px;}
+  .slider.active{outline:2px solid #ff9f0a;outline-offset:3px;}
   .slider.active .bfill{background:#ff9f0a;}
-  .about{font-size:20px;color:var(--sec);line-height:1.5;padding:14px 4px;}
-  /* ---- location keyboard ---- */
-  #loc .vbody{height:100%;overflow-y:auto;padding:6px 24px 16px;scrollbar-width:none;}
-  .qbox{font-size:26px;background:var(--card);border-radius:14px;padding:14px 20px;font-weight:500;margin:0 4px 12px;}
-  #locResults .res{font-size:24px;padding:15px 16px;border-radius:12px;font-weight:500;}
-  #locResults .res:active{background:var(--card2);}
+  .about{font-size:17px;color:var(--sec);line-height:1.6;padding:16px 2px;letter-spacing:.3px;}
+  /* location keyboard */
+  .qbox{font-size:24px;background:var(--card);border-radius:12px;padding:14px 20px;font-weight:500;margin:6px 2px 12px;}
+  #locResults .res{font-size:23px;padding:15px 14px;border-radius:11px;font-weight:500;}
+  #locResults .res:active{background:var(--card);}
   .krow{display:flex;gap:7px;justify-content:center;margin-bottom:7px;}
-  .key{flex:1;background:var(--card);border-radius:11px;font-size:26px;font-weight:600;color:var(--fg);
-    padding:15px 0;text-align:center;font-family:inherit;}
-  .key:active{background:var(--card2);}
+  .key{flex:1;background:var(--card);border-radius:10px;font-size:24px;font-weight:600;color:var(--fg);
+    padding:14px 0;text-align:center;font-family:inherit;}
+  .key:active{background:var(--hair);}
   .key.wide{flex:2.4;}
-  button:active,.npbar:active,.npbtn:active,.res:active{transform:scale(.98);}
+  button:active,.res:active{transform:scale(.98);}
 </style>
 </head>
 <body>
 <div id="top">
-  <div class="twx"><span id="tIcon">🌡️</span><span id="tTemp">--°</span><span class="tdesc" id="tDesc"></span></div>
+  <div class="place"><span id="tPin"></span><span id="tPlace">—</span></div>
   <div class="ttime"><span class="tdate" id="tDate">—</span><span id="tClock">--:--</span><span id="tAp"></span></div>
 </div>
 
 <div id="home">
   <div class="hmain">
-    <div class="hclockwrap">
+    <div class="hclock">
       <div id="hClock">--:--</div>
       <div id="hDate">—</div>
-      <div id="hPlace">📍 —</div>
+      <div id="hPlace"><span id="hPin"></span><span id="hPlaceName">—</span></div>
     </div>
     <div class="hwx">
-      <div class="hwx-top"><span class="hwx-icon" id="cwIcon">🌡️</span><span class="hwx-temp" id="cwTemp">--°</span></div>
-      <div class="hwx-desc" id="cwDesc">Connecting…</div>
-      <div class="hwx-sub" id="cwSub"></div>
-      <div class="hwx-indoor" id="cwIndoor"></div>
+      <div class="hwx-top"><span class="ic" id="cwIcon"></span><span class="hwx-temp" id="cwTemp">--&deg;</span></div>
+      <div class="hwx-desc" id="cwDesc">Connecting</div>
+      <div class="hwx-hl" id="cwHL"></div>
+      <div class="hwx-indoor"><span class="lbl">Indoor</span><span class="v" id="cwIndoor">--&deg;</span></div>
     </div>
   </div>
   <div class="hourly" id="hourly"></div>
@@ -179,15 +136,16 @@
   <div class="vclose" onclick="closeView('settings')">Back</div>
   <div class="vtitle">Settings</div>
   <div class="vbody">
-    <div class="srow"><span class="sk">Units</span>
-      <div class="seg"><button onclick="setUnit('C')" data-u="C">°C</button><button onclick="setUnit('F')" data-u="F">°F</button></div></div>
-    <div class="srow"><span class="sk">Location</span>
+    <div class="srow"><span class="lbl">Units</span>
+      <div class="seg"><button onclick="setUnit('C')" data-u="C">&deg;C</button><button onclick="setUnit('F')" data-u="F">&deg;F</button></div></div>
+    <div class="srow"><span class="lbl">Location</span>
       <div class="seg"><button onclick="openView('loc')">Change city</button></div></div>
-    <div class="srow"><span class="sk">Appearance</span>
-      <div class="seg"><button onclick="setTheme('dark')" data-th="dark">Dark</button><button onclick="setTheme('light')" data-th="light">Light</button></div></div>
-    <div class="srow"><span class="sk">Brightness <span id="bpct" style="color:var(--sec);font-weight:400"></span></span>
-      <div class="bwrap"><button class="bbtn" id="bAuto" style="width:auto;padding:14px 18px;font-size:24px" onclick="setAuto(!brightAuto)">Auto</button>
-        <button class="bbtn" onclick="brightStep(-10)">−</button>
+    <div class="srow"><span class="lbl">Appearance</span>
+      <div class="seg"><button onclick="setTheme('auto')" data-th="auto">Auto</button><button onclick="setTheme('dark')" data-th="dark">Dark</button><button onclick="setTheme('light')" data-th="light">Light</button></div>
+      <div class="about" id="thHint" style="padding:2px 0 0"></div></div>
+    <div class="srow"><span class="lbl">Brightness <span id="bpct" style="color:var(--fg);font-weight:600;letter-spacing:0"></span></span>
+      <div class="bwrap"><button class="bbtn" id="bAuto" style="width:auto;padding:13px 18px;font-size:20px" onclick="setAuto(!brightAuto)">Auto</button>
+        <button class="bbtn" onclick="brightStep(-10)">&minus;</button>
         <div class="slider" id="bbar" onclick="brightTap(event)"><div class="bfill" id="bfill"></div></div>
         <button class="bbtn" onclick="brightStep(10)">+</button></div></div>
     <div class="about" id="about"></div>
@@ -195,66 +153,90 @@
 </div>
 
 <script>
-const VERSION="2.0";
+const VERSION="3.0", BR_FLOOR=30;
 const CT="http://127.0.0.1:8091";
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-let dispOff=false;
-function toggleDisplay(){dispOff=!dispOff;fetch(CT+"/display?on="+(dispOff?0:1)).catch(()=>{});}
+// ---- line-SVG weather icons (monochrome, scale with font-size) ----
+function svg(p){return '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
+const PIN=svg('<path d="M20 10c0 4.4-8 12-8 12s-8-7.6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/>');
+const WI={
+  clear:svg('<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>'),
+  moon:svg('<path d="M20 14.3A8 8 0 0 1 9.7 4 8 8 0 1 0 20 14.3Z"/>'),
+  partly:svg('<path d="M12 3v1.5M5.5 5.5l1 1M3.5 12H5M18.5 5.5l-1 1M20.5 12H19"/><path d="M14.5 10.5a3.5 3.5 0 1 0-5 4"/><path d="M16.5 19H8a4 4 0 1 1 .9-7.9A5.5 5.5 0 0 1 19.6 12 3.5 3.5 0 0 1 16.5 19Z"/>'),
+  cloud:svg('<path d="M17.5 19H8a5.5 5.5 0 1 1 1.1-10.9A6.5 6.5 0 0 1 20.5 11 3.75 3.75 0 0 1 17.5 19Z"/>'),
+  fog:svg('<path d="M4.5 13.9A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 2.2 7.3"/><path d="M16 17.5H7M17 20.5H9"/>'),
+  drizzle:svg('<path d="M4.5 13.9A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 2.2 7.3"/><path d="M8 18.5v1M12 19.5v1M16 18.5v1"/>'),
+  rain:svg('<path d="M4.5 13.9A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 2.2 7.3"/><path d="M8 18v3M12 18v3M16 18v3"/>'),
+  snow:svg('<path d="M4.5 13.9A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 2.2 7.3"/><path d="M8 18h.01M8 21h.01M12 19h.01M12 22h.01M16 18h.01M16 21h.01"/>'),
+  storm:svg('<path d="M6 15.5A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 .5 8"/><path d="m12.5 13-2.5 4h3l-2.5 4"/>')
+};
+WI.mclear=WI.clear;
+function wicon(key,allowMoon){if(allowMoon&&(key==='clear'||key==='mclear')&&isNight())return WI.moon;return WI[key]||WI.cloud;}
+document.getElementById('tPin').innerHTML=PIN;document.getElementById('hPin').innerHTML=PIN;
 // ---- Pi-authoritative clock ----
 let srvOffMs=null,tzOffMin=-(new Date().getTimezoneOffset()),haveTime=false;
 function setSrvTime(n,tz){if(n){srvOffMs=n-Date.now();haveTime=true;}if(typeof tz==='number')tzOffMin=tz;}
+function nowD(){return new Date((srvOffMs!=null?Date.now()+srvOffMs:Date.now())+tzOffMin*60000);}
 function two(n){return String(n).padStart(2,'0');}
+let sun={rise:null,set:null};
+function nowMin(){const d=nowD();return d.getUTCHours()*60+d.getUTCMinutes();}
+function hm(s){if(!s)return null;const p=s.split(':');return (+p[0])*60+(+p[1]);}
+function isNight(){if(!haveTime||!sun.rise||!sun.set)return false;const n=nowMin(),r=hm(sun.rise),s=hm(sun.set);return !(n>=r&&n<s);}
 function tick(){
-  if(!haveTime){return;}
-  const d=new Date(Date.now()+srvOffMs+tzOffMin*60000);
-  let h=d.getUTCHours();const ap=h<12?'AM':'PM';const hh=(h%12)||12;const mm=two(d.getUTCMinutes());
+  if(!haveTime)return;
+  const d=nowD();let h=d.getUTCHours();const ap=h<12?'AM':'PM';const hh=(h%12)||12;const mm=two(d.getUTCMinutes());
   document.getElementById('hClock').innerHTML=hh+':'+mm+'<span class="ap">'+ap+'</span>';
-  document.getElementById('tClock').textContent=hh+':'+mm;
-  document.getElementById('tAp').textContent=ap;
+  document.getElementById('tClock').textContent=hh+':'+mm;document.getElementById('tAp').textContent=ap;
   const ds=DAYS[d.getUTCDay()]+', '+MON[d.getUTCMonth()]+' '+d.getUTCDate();
-  document.getElementById('hDate').textContent=ds;
-  document.getElementById('tDate').textContent=ds;
-  autoApply();
+  document.getElementById('hDate').textContent=ds;document.getElementById('tDate').textContent=ds;
+  applyThemeAuto();autoApply();
 }
 setInterval(tick,1000);
 async function syncTime(){try{const t=await (await fetch('/api/time',{cache:'no-store'})).json();setSrvTime(t.now,t.tzoff);tick();}catch(e){}}
 syncTime();setInterval(syncTime,30000);
 // ---- Weather ----
-let unit='C';
+let unit='C',_cwKey='';
 async function fetchWeather(){
   try{
     const w=await (await fetch('/api/weather',{cache:'no-store'})).json();
     if(w.now)setSrvTime(w.now,w.tzoff);
+    if(w.sunrise)sun={rise:w.sunrise,set:w.sunset};
     unit=w.unit||'C';markUnit();
-    document.getElementById('hPlace').textContent='📍 '+(w.place||'—');
-    document.getElementById('tIcon').textContent=w.icon||'🌡️';
-    document.getElementById('tTemp').textContent=(w.temp==null?'--':w.temp)+'°';
-    document.getElementById('tDesc').textContent=w.temp==null?'':(w.desc||'');
-    document.getElementById('cwIcon').textContent=w.icon||'🌡️';
-    document.getElementById('cwTemp').textContent=(w.temp==null?'--':w.temp)+'°';
-    document.getElementById('cwDesc').textContent=w.temp==null?'Connecting…':(w.desc||'—');
-    document.getElementById('cwSub').innerHTML=w.temp==null?'':('H <b>'+w.hi+'°</b>   L <b>'+w.lo+'°</b>');
-    document.getElementById('cwIndoor').innerHTML=(w.indoor!=null)?('🏠 Indoor <b>'+w.indoor+'°</b>'):'';
+    document.getElementById('tPlace').textContent=w.place||'—';
+    document.getElementById('hPlaceName').textContent=w.place||'—';
+    document.getElementById('cwTemp').innerHTML=(w.temp==null?'--':w.temp)+'&deg;';
+    document.getElementById('cwDesc').textContent=w.temp==null?'Connecting':(w.desc||'—');
+    document.getElementById('cwHL').innerHTML=(w.temp==null)?'':('H <b>'+w.hi+'&deg;</b>&nbsp;&nbsp;&nbsp;L <b>'+w.lo+'&deg;</b>');
+    document.getElementById('cwIndoor').innerHTML=(w.indoor!=null)?(w.indoor+'&deg;'):'--&deg;';
+    document.getElementById('cwIcon').innerHTML=wicon(w.icon||'cloud',true);
+    document.getElementById('tPlace').dataset.x='';
     const H=document.getElementById('hourly');H.innerHTML='';
     (w.hourly||[]).slice(0,7).forEach(h=>{const c=document.createElement('div');c.className='hcell';
-      c.innerHTML='<div class="ht">'+hr12(h.t)+'</div><div class="hi">'+h.icon+'</div><div class="hd">'+h.temp+'°</div>';H.appendChild(c);});
+      c.innerHTML='<div class="ht">'+hr12(h.t)+'</div><div class="ic">'+wicon(h.icon)+'</div><div class="hd">'+h.temp+'&deg;</div>';H.appendChild(c);});
     renderForecast(w.daily||[]);
-  }catch(e){document.getElementById('cwDesc').textContent='Connecting…';}
+    applyThemeAuto();
+  }catch(e){document.getElementById('cwDesc').textContent='Connecting';}
 }
 fetchWeather();setInterval(fetchWeather,180000);
 function hr12(t){let h=parseInt((t||'0:0').split(':')[0]);const ap=h<12?'a':'p';h=h%12;if(h===0)h=12;return h+ap;}
 function renderForecast(d){const b=document.getElementById('fcBody');if(!d.length){b.innerHTML='<div class="about">No forecast.</div>';return;}
-  b.innerHTML=d.map((x,i)=>`<div class="drow"><div class="dw">${i===0?'Today':x.dow}</div><div class="di">${x.icon}</div><div class="dr">${x.hi}°<span class="lo">${x.lo}°</span></div></div>`).join('');}
-// ---- views + nav ----
+  b.innerHTML=d.map((x,i)=>`<div class="drow"><div class="dw">${i===0?'Today':x.dow}</div><div class="di">${wicon(x.icon)}</div><div class="dr">${x.hi}&deg;<span class="lo">${x.lo}&deg;</span></div></div>`).join('');}
+// ---- views + knob nav ----
 const OVL=['forecast','loc','settings'];
+function curOverlay(){return OVL.find(id=>document.getElementById(id).classList.contains('show'));}
 function syncOvl(){document.body.classList.toggle('ovl',!!curOverlay());}
 function openView(id){closeAll();document.getElementById(id).classList.add('show');syncOvl();
-  if(id==='settings'){markUnit();markTheme();applyBright();markBrightAuto();setSel=0;sliderActive=false;setTimeout(setHi,60);document.getElementById('about').innerHTML='Car Thing Weather Station · v<b>'+VERSION+'</b>';}
+  if(id==='settings'){markUnit();markTheme();applyBright();markBrightAuto();setSel=0;sliderActive=false;setTimeout(setHi,40);document.getElementById('about').innerHTML='Car Thing Weather Station · v'+VERSION;}
   if(id==='loc')openLoc();}
 function closeView(id){document.getElementById(id).classList.remove('show');syncOvl();}
 function closeAll(){OVL.forEach(id=>document.getElementById(id).classList.remove('show'));syncOvl();}
-function curOverlay(){return OVL.find(id=>document.getElementById(id).classList.contains('show'));}
+let setSel=0,sliderActive=false;
+function setOpts(){return Array.from(document.querySelectorAll('#settings .vbody button, #settings .vbody .slider'));}
+function setHi(){const o=setOpts();o.forEach((b,i)=>b.classList.toggle('khi',i===setSel));const c=o[setSel];if(c)c.scrollIntoView({block:'nearest'});}
+function setMove(d){const o=setOpts();if(!o.length)return;sliderActive=false;
+  document.querySelectorAll('#settings .slider.active').forEach(s=>s.classList.remove('active'));
+  setSel=(setSel+d+o.length)%o.length;setHi();}
 document.addEventListener('keydown',(ev)=>{
   const k=ev.key;
   if(k==='m'||k==='M'){if(!ev.repeat)toggleDisplay();return;}
@@ -279,13 +261,15 @@ document.addEventListener('keydown',(ev)=>{
     else{const b=document.querySelector('#'+v+' .vbody');if(b){if(k==='ArrowDown')b.scrollBy({top:120});else if(k==='ArrowUp')b.scrollBy({top:-120});}}return;}
   if(k==='Enter')openView('forecast');
 });
+let dispOff=false;
+function toggleDisplay(){dispOff=!dispOff;fetch(CT+'/display?on='+(dispOff?0:1)).catch(()=>{});}
 // ---- location ----
 let query='';
 function openLoc(){query='';document.getElementById('qbox').textContent='Type a city…';document.getElementById('locResults').innerHTML='';buildKb();}
 const KB=[['Q','W','E','R','T','Y','U','I','O','P'],['A','S','D','F','G','H','J','K','L'],['Z','X','C','V','B','N','M']];
 function buildKb(){const kb=document.getElementById('kb');kb.innerHTML='';
   KB.forEach(r=>{const row=document.createElement('div');row.className='krow';
-    r.forEach(ch=>{const k=document.createElement('div');k.className='key';k.textContent=ch;k.onclick=()=>{query+=ch;showQ();};row.appendChild(k);});kb.appendChild(row);});
+    r.forEach(ch=>{const key=document.createElement('div');key.className='key';key.textContent=ch;key.onclick=()=>{query+=ch;showQ();};row.appendChild(key);});kb.appendChild(row);});
   const row=document.createElement('div');row.className='krow';
   const bs=document.createElement('div');bs.className='key';bs.textContent='⌫';bs.onclick=()=>{query=query.slice(0,-1);showQ();};
   const sp=document.createElement('div');sp.className='key wide';sp.textContent='space';sp.onclick=()=>{query+=' ';showQ();};
@@ -295,36 +279,35 @@ function showQ(){document.getElementById('qbox').textContent=query||'Type a city
 async function doSearch(){if(!query.trim())return;const box=document.getElementById('locResults');box.innerHTML='<div class="res">Searching…</div>';
   try{const res=await (await fetch('/api/geocode?q='+encodeURIComponent(query))).json();box.innerHTML='';
     if(!res.length){box.innerHTML='<div class="res">No matches</div>';return;}
-    res.forEach(r=>{const d=document.createElement('div');d.className='res';d.textContent='📍 '+r.place;
+    res.forEach(r=>{const d=document.createElement('div');d.className='res';d.textContent=r.place;
       d.onclick=async()=>{await fetch('/api/weather/loc?lat='+r.lat+'&lon='+r.lon+'&place='+encodeURIComponent(r.place));await fetchWeather();closeView('loc');};box.appendChild(d);});
   }catch(e){box.innerHTML='<div class="res">Search failed</div>';}}
 async function setUnit(u){unit=u;markUnit();await fetch('/api/weather/unit?u='+u);fetchWeather();}
 function markUnit(){document.querySelectorAll('[data-u]').forEach(b=>b.classList.toggle('on',b.dataset.u===unit));}
-// ---- settings knob nav: scroll to the slider, PRESS to activate (turns orange), turn to dim/brighten ----
-let setSel=0,sliderActive=false;
-function setOpts(){return Array.from(document.querySelectorAll('#settings .vbody button, #settings .vbody .slider'));}
-function setHi(){const o=setOpts();o.forEach((b,i)=>b.classList.toggle('khi',i===setSel));const c=o[setSel];if(c)c.scrollIntoView({block:'nearest',behavior:'smooth'});}
-function setMove(d){const o=setOpts();if(!o.length)return;sliderActive=false;
-  document.querySelectorAll('#settings .slider.active').forEach(s=>s.classList.remove('active'));
-  setSel=(setSel+d+o.length)%o.length;setHi();}
-// ---- theme + brightness ----
-let brightPct=parseInt(localStorage.getItem('brightPct')||'80')||80,brightAuto=localStorage.getItem('brightAuto')==='1',_lastAuto=-1;
-function setTheme(t){document.body.classList.toggle('light',t==='light');localStorage.setItem('theme',t);markTheme();}
-function markTheme(){const th=document.body.classList.contains('light')?'light':'dark';document.querySelectorAll('[data-th]').forEach(b=>b.classList.toggle('on',b.dataset.th===th));}
-function applyBright(){brightPct=Math.max(10,Math.min(100,brightPct));
+// ---- theme (auto by sunset / dark / light) ----
+let themeMode=localStorage.getItem('themeMode')||'auto';
+function setTheme(m){themeMode=m;localStorage.setItem('themeMode',m);markTheme();applyThemeAuto();
+  if(m==='dark')document.body.classList.remove('light');if(m==='light')document.body.classList.add('light');}
+function applyThemeAuto(){if(themeMode!=='auto')return;document.body.classList.toggle('light',haveTime&&sun.rise&&!isNight());}
+function markTheme(){document.querySelectorAll('[data-th]').forEach(b=>b.classList.toggle('on',b.dataset.th===themeMode));
+  const h=document.getElementById('thHint');if(h)h.textContent=themeMode==='auto'?('Light by day, dark after sunset'+(sun.set?(' ('+sun.set+')'):'')):'';}
+// ---- brightness (floor avoids the low-PWM flicker; debounced so the knob isn't laggy) ----
+let brightPct=parseInt(localStorage.getItem('brightPct')||'80')||80,brightAuto=localStorage.getItem('brightAuto')==='1',_lastAuto=-1,_brT=null;
+function applyBright(){brightPct=Math.max(BR_FLOOR,Math.min(100,brightPct));
   document.getElementById('bfill').style.width=brightPct+'%';
   const p=document.getElementById('bpct');if(p)p.textContent=brightPct+(brightAuto?'% · auto':'%');
-  localStorage.setItem('brightPct',brightPct);fetch(CT+'/bright?level='+brightPct).catch(()=>{});}
+  localStorage.setItem('brightPct',brightPct);
+  clearTimeout(_brT);_brT=setTimeout(()=>fetch(CT+'/bright?level='+brightPct).catch(()=>{}),90);}
 function manualBright(v){brightAuto=false;localStorage.setItem('brightAuto','0');markBrightAuto();brightPct=v;applyBright();}
 function brightStep(d){manualBright(brightPct+d);}
 function brightTap(e){const r=document.getElementById('bbar').getBoundingClientRect();manualBright(Math.round((e.clientX-r.left)/r.width*100));}
-function autoLevel(h){if(h>=8&&h<19)return 100;if(h>=6&&h<8)return 75;if(h>=19&&h<22)return 55;return 25;}
-function autoApply(f){if(!brightAuto||!haveTime)return;const lvl=autoLevel(new Date(Date.now()+srvOffMs+tzOffMin*60000).getUTCHours());
+function autoLevel(h){if(h>=8&&h<19)return 100;if(h>=6&&h<8)return 75;if(h>=19&&h<22)return 60;return 40;}
+function autoApply(f){if(!brightAuto||!haveTime)return;const lvl=autoLevel(nowD().getUTCHours());
   if(f||lvl!==_lastAuto){_lastAuto=lvl;brightPct=lvl;applyBright();}}
 function setAuto(on){brightAuto=on;localStorage.setItem('brightAuto',on?'1':'0');markBrightAuto();if(on)autoApply(true);}
 function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classList.toggle('on',brightAuto);}
-(function(){if(localStorage.getItem('theme')==='light')document.body.classList.add('light');
-  setTimeout(()=>{markBrightAuto();if(brightAuto)autoApply(true);else applyBright();},1500);})();
+(function(){if(themeMode==='light')document.body.classList.add('light');markTheme();
+  setTimeout(()=>{markBrightAuto();if(brightAuto)autoApply(true);else applyBright();},1200);})();
 </script>
 </body>
 </html>

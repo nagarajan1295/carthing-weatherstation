@@ -18,17 +18,17 @@ WCONF = os.path.join(BASE, "weather.json")
 SP_CONF = os.path.join(BASE, "spotify.json")
 PORT = int(os.environ.get("WS_PORT", "8095"))
 
-# WMO weather code -> (emoji icon, short description)
-WMO = {0:("☀️","Clear"),1:("\U0001f324️","Mainly clear"),2:("⛅","Partly cloudy"),
- 3:("☁️","Overcast"),45:("\U0001f32b️","Fog"),48:("\U0001f32b️","Rime fog"),
- 51:("\U0001f326️","Light drizzle"),53:("\U0001f326️","Drizzle"),55:("\U0001f326️","Heavy drizzle"),
- 56:("\U0001f327️","Freezing drizzle"),57:("\U0001f327️","Freezing drizzle"),
- 61:("\U0001f327️","Light rain"),63:("\U0001f327️","Rain"),65:("\U0001f327️","Heavy rain"),
- 66:("\U0001f327️","Freezing rain"),67:("\U0001f327️","Freezing rain"),
- 71:("❄️","Light snow"),73:("❄️","Snow"),75:("❄️","Heavy snow"),77:("❄️","Snow grains"),
- 80:("\U0001f326️","Showers"),81:("\U0001f327️","Showers"),82:("\U0001f327️","Heavy showers"),
- 85:("\U0001f328️","Snow showers"),86:("\U0001f328️","Snow showers"),
- 95:("⛈️","Thunderstorm"),96:("⛈️","Thunderstorm"),99:("⛈️","Thunderstorm")}
+# WMO weather code -> (icon key for the UI's line-SVG set, short description)
+WMO = {0:("clear","Clear"),1:("mclear","Mainly clear"),2:("partly","Partly cloudy"),
+ 3:("cloud","Overcast"),45:("fog","Fog"),48:("fog","Rime fog"),
+ 51:("drizzle","Light drizzle"),53:("drizzle","Drizzle"),55:("drizzle","Heavy drizzle"),
+ 56:("drizzle","Freezing drizzle"),57:("drizzle","Freezing drizzle"),
+ 61:("rain","Light rain"),63:("rain","Rain"),65:("rain","Heavy rain"),
+ 66:("rain","Freezing rain"),67:("rain","Freezing rain"),
+ 71:("snow","Light snow"),73:("snow","Snow"),75:("snow","Heavy snow"),77:("snow","Snow grains"),
+ 80:("rain","Showers"),81:("rain","Showers"),82:("rain","Heavy showers"),
+ 85:("snow","Snow showers"),86:("snow","Snow showers"),
+ 95:("storm","Thunderstorm"),96:("storm","Thunderstorm"),99:("storm","Thunderstorm")}
 DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
 
 
@@ -54,7 +54,7 @@ def tz_off_min():
     return -secs_west // 60
 
 def _wmo(code):
-    return WMO.get(int(code), ("\U0001f321️", "—"))
+    return WMO.get(int(code), ("cloud", "—"))
 
 # Indoor temperature from a BMP280 on the Pi's I2C bus 1 @ 0x77.
 _bmp = {"bus": None, "cal": None}
@@ -93,7 +93,7 @@ def weather():
                "&current=temperature_2m,apparent_temperature,relative_humidity_2m,"
                "weather_code,wind_speed_10m"
                "&hourly=temperature_2m,weather_code"
-               "&daily=weather_code,temperature_2m_max,temperature_2m_min"
+               "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset"
                "&forecast_days=7&timezone=auto"
                "&temperature_unit=%s&wind_speed_unit=%s"
                % (c["lat"], c["lon"], "fahrenheit" if imperial else "celsius",
@@ -124,10 +124,11 @@ def weather():
                      "wind_unit": "mph" if imperial else "km/h",
                      "hi": daily[0]["hi"] if daily else None,
                      "lo": daily[0]["lo"] if daily else None,
-                     "hourly": hourly, "daily": daily})
+                     "hourly": hourly, "daily": daily,
+                     "sunrise": DD["sunrise"][0][11:16], "sunset": DD["sunset"][0][11:16]})
         return base
     except Exception as e:
-        base.update({"temp": None, "icon": "\U0001f321️", "desc": "—",
+        base.update({"temp": None, "icon": "cloud", "desc": "—",
                      "hourly": [], "daily": [], "err": str(e)})
         return base
 
