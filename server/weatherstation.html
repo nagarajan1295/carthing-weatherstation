@@ -157,38 +157,6 @@
     </div>
   </div>
   <div class="hourly" id="hourly"></div>
-  <div class="npbar" id="npbar" onclick="openSpotify()">
-    <div class="npthumb" id="npThumb">♫</div>
-    <div class="npmeta"><div class="nptitle" id="npbTitle">Spotify</div><div class="npsub" id="npbSub">Tap to open</div></div>
-    <button class="npbtn" id="npbPlay" onclick="event.stopPropagation();spCmd('playpause')">▶</button>
-  </div>
-</div>
-
-<div id="spotify" class="view">
-  <div class="spbg" id="spBg"></div>
-  <div class="vclose" onclick="closeView('spotify')">Back</div>
-  <div class="spcontent">
-    <div class="sptop">
-      <div class="spArt" id="spArt">♫</div>
-      <div class="spInfo">
-        <div class="spCtx" id="spCtx"></div>
-        <div class="spTitle" id="spTitle">Nothing playing</div>
-        <div class="spArtist" id="spArtist"></div>
-      </div>
-    </div>
-    <div class="spBarWrap">
-      <div class="spBar"><div class="spFill" id="spFill"></div></div>
-      <div class="spTimes"><span id="spPos">0:00</span><span id="spDur">0:00</span></div>
-    </div>
-    <div class="spCtl">
-      <button class="spBtn ic" id="spShuf" onclick="spCmd('shuffle')" aria-label="shuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="m4 4 5 5"/></svg></button>
-      <button class="spBtn" onclick="spCmd('prev')" aria-label="previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2.2v12H6zM20 6v12l-9.6-6z"/></svg></button>
-      <button class="spBtn big" id="spPlay" onclick="spCmd('playpause')" aria-label="play"></button>
-      <button class="spBtn" onclick="spCmd('next')" aria-label="next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.8 6H18v12h-2.2zM4 6v12l9.6-6z"/></svg></button>
-      <button class="spBtn ic" id="spLike" onclick="spCmd('like')" aria-label="like"></button>
-    </div>
-    <div class="spHint" id="spHint"></div>
-  </div>
 </div>
 
 <div id="forecast" class="view">
@@ -215,8 +183,6 @@
       <div class="seg"><button onclick="setUnit('C')" data-u="C">°C</button><button onclick="setUnit('F')" data-u="F">°F</button></div></div>
     <div class="srow"><span class="sk">Location</span>
       <div class="seg"><button onclick="openView('loc')">Change city</button></div></div>
-    <div class="srow"><span class="sk">Music</span>
-      <div class="seg"><button onclick="openSpotify()">Open Spotify</button></div></div>
     <div class="srow"><span class="sk">Appearance</span>
       <div class="seg"><button onclick="setTheme('dark')" data-th="dark">Dark</button><button onclick="setTheme('light')" data-th="light">Light</button></div></div>
     <div class="srow"><span class="sk">Brightness <span id="bpct" style="color:var(--sec);font-weight:400"></span></span>
@@ -280,52 +246,8 @@ fetchWeather();setInterval(fetchWeather,180000);
 function hr12(t){let h=parseInt((t||'0:0').split(':')[0]);const ap=h<12?'a':'p';h=h%12;if(h===0)h=12;return h+ap;}
 function renderForecast(d){const b=document.getElementById('fcBody');if(!d.length){b.innerHTML='<div class="about">No forecast.</div>';return;}
   b.innerHTML=d.map((x,i)=>`<div class="drow"><div class="dw">${i===0?'Today':x.dow}</div><div class="di">${x.icon}</div><div class="dr">${x.hi}°<span class="lo">${x.lo}°</span></div></div>`).join('');}
-// ---- Spotify ----
-let spState={};
-function fmtT(ms){if(!ms||ms<0)ms=0;const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+two(s%60);}
-function spOpen(){return document.getElementById('spotify').classList.contains('show');}
-function openSpotify(){openView('spotify');renderSpotify(spState);}
-function renderNp(s){
-  const th=document.getElementById('npThumb'),ti=document.getElementById('npbTitle'),
-        su=document.getElementById('npbSub'),pl=document.getElementById('npbPlay');
-  if(s&&s.title){
-    if(s.art){th.style.backgroundImage=`url('${s.art}')`;th.textContent='';}else{th.style.backgroundImage='none';th.textContent='♫';}
-    ti.textContent=s.title;su.textContent=s.artist||'';pl.textContent=s.playing?'⏸':'▶';pl.style.display='';
-  }else{th.style.backgroundImage='none';th.textContent='♫';ti.textContent='Spotify';
-    su.textContent=(s&&s.available)?'Nothing playing · tap to open':'Tap to open';pl.style.display='none';}
-}
-const SVG_PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>';
-const SVG_PAUSE='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z"/></svg>';
-const SVG_HEART_O='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20.5C5.5 15 3 12.2 3 9.1 3 6.8 4.9 5 7.1 5 8.8 5 10.4 6 12 8c1.6-2 3.2-3 4.9-3C19.1 5 21 6.8 21 9.1c0 3.1-2.5 5.9-9 11.4z"/></svg>';
-const SVG_HEART_F='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.5C5.5 15 3 12.2 3 9.1 3 6.8 4.9 5 7.1 5 8.8 5 10.4 6 12 8c1.6-2 3.2-3 4.9-3C19.1 5 21 6.8 21 9.1c0 3.1-2.5 5.9-9 11.4z"/></svg>';
-let _spArtUrl='';
-function renderSpotify(s){s=s||{};
-  const art=document.getElementById('spArt'),bg=document.getElementById('spBg');
-  const url=s.art||'';
-  if(url!==_spArtUrl){_spArtUrl=url;
-    if(url){art.style.backgroundImage=`url('${url}')`;art.textContent='';bg.style.backgroundImage=`url('${url}')`;}
-    else{art.style.backgroundImage='none';art.textContent='♫';bg.style.backgroundImage='none';}}
-  document.getElementById('spCtx').textContent=s.context||'';
-  document.getElementById('spTitle').textContent=s.title||(s.available?'Nothing playing':'Spotify not connected');
-  document.getElementById('spArtist').textContent=s.artist||'';
-  const dur=s.dur_ms||0,pos=s.pos_ms||0;
-  document.getElementById('spFill').style.width=(dur?Math.min(100,pos/dur*100):0)+'%';
-  document.getElementById('spPos').textContent=fmtT(pos);document.getElementById('spDur').textContent=fmtT(dur);
-  document.getElementById('spPlay').innerHTML=s.playing?SVG_PAUSE:SVG_PLAY;
-  document.getElementById('spShuf').classList.toggle('on',!!s.shuffle);
-  const like=document.getElementById('spLike');like.innerHTML=s.liked?SVG_HEART_F:SVG_HEART_O;like.classList.toggle('on',!!s.liked);
-  document.getElementById('spHint').textContent=s.available?(s.title?'':'Nothing playing — start a song on Spotify'):'Spotify not connected';
-}
-function spCmd(c){fetch('/api/spotify/cmd?c='+c).then(()=>setTimeout(pollSpotify,250)).catch(()=>{});}
-function spVol(d){const v=Math.max(0,Math.min(100,(spState&&spState.volume!=null?spState.volume:50)+d));
-  if(spState)spState.volume=v;
-  fetch('/api/spotify/vol?v='+v).then(()=>setTimeout(pollSpotify,300)).catch(()=>{});}
-async function pollSpotify(){
-  try{const s=await (await fetch('/api/spotify',{cache:'no-store'})).json();spState=s;renderNp(s);if(spOpen())renderSpotify(s);}
-  catch(e){renderNp(null);if(spOpen())renderSpotify({available:false});}}
-pollSpotify();setInterval(pollSpotify,1000);
 // ---- views + nav ----
-const OVL=['spotify','forecast','loc','settings'];
+const OVL=['forecast','loc','settings'];
 function syncOvl(){document.body.classList.toggle('ovl',!!curOverlay());}
 function openView(id){closeAll();document.getElementById(id).classList.add('show');syncOvl();
   if(id==='settings'){markUnit();markTheme();applyBright();markBrightAuto();setSel=0;sliderActive=false;setTimeout(setHi,60);document.getElementById('about').innerHTML='Car Thing Weather Station · v<b>'+VERSION+'</b>';}
@@ -338,13 +260,9 @@ document.addEventListener('keydown',(ev)=>{
   if(k==='m'||k==='M'){if(!ev.repeat)toggleDisplay();return;}
   if(k==='1'){closeAll();return;}
   if(k==='2'){curOverlay()==='forecast'?closeAll():openView('forecast');return;}
-  if(k==='3'){curOverlay()==='spotify'?closeAll():openSpotify();return;}
+  if(k==='3'){curOverlay()==='settings'?closeAll():openView('settings');return;}
   if(k==='4'){curOverlay()==='settings'?closeAll():openView('settings');return;}
   const v=curOverlay();
-  if(v==='spotify'){
-    if(k==='ArrowRight')spCmd('next');else if(k==='ArrowLeft')spCmd('prev');
-    else if(k==='ArrowUp')spVol(5);else if(k==='ArrowDown')spVol(-5);
-    else if(k==='Enter')spCmd('playpause');else if(k==='Escape'||k==='Backspace')closeView('spotify');return;}
   if(v==='settings'){
     const o=setOpts()[setSel];const onSlider=o&&o.classList.contains('slider');
     if(onSlider&&sliderActive){
