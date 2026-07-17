@@ -80,57 +80,151 @@ def _read_indoor_c():
         _bmp["bus"] = None
         return None
 
-def weather():
-    c = load_wconf()
+def _get_json(url, timeout=8):
+    return json.load(urllib.request.urlopen(
+        urllib.request.Request(url, headers={"User-Agent": "carthing-weatherstation/1.0 (weatherthing)"}),
+        timeout=timeout))
+
+def _icon_from_text(s):
+    # Map a National Weather Service shortForecast string to our UI icon key.
+    t = (s or "").lower()
+    if "thunder" in t: return "storm"
+    if any(w in t for w in ("snow", "flurr", "sleet", "ice", "wintry", "blizzard")): return "snow"
+    if "freezing" in t or "drizzle" in t: return "drizzle"
+    if any(w in t for w in ("rain", "shower")): return "rain"
+    if any(w in t for w in ("fog", "haze", "smoke", "mist")): return "fog"
+    if "partly" in t or "few clouds" in t: return "partly"
+    if any(w in t for w in ("mostly cloudy", "overcast", "broken clouds", "cloudy")): return "cloud"
+    if any(w in t for w in ("sunny", "clear", "fair")): return "clear"
+    return "cloud"
+
+def _weather_openmeteo(c, base):
     imperial = c["unit"] == "F"
+    url = ("https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s"
+           "&current=temperature_2m,apparent_temperature,relative_humidity_2m,"
+           "weather_code,wind_speed_10m"
+           "&hourly=temperature_2m,weather_code"
+           "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset"
+           "&forecast_days=7&timezone=auto"
+           "&temperature_unit=%s&wind_speed_unit=%s"
+           % (c["lat"], c["lon"], "fahrenheit" if imperial else "celsius",
+              "mph" if imperial else "kmh"))
+    d = _get_json(url, timeout=6)
+    cur = d["current"]
+    icon, desc = _wmo(cur["weather_code"])
+    # hourly: the next 8 hours from "now"
+    H = d["hourly"]; times = H["time"]
+    nowiso = cur["time"][:13]
+    try: start = next(i for i, t in enumerate(times) if t[:13] >= nowiso)
+    except StopIteration: start = 0
+    hourly = [{"t": times[i][11:16], "temp": round(H["temperature_2m"][i]),
+               "icon": _wmo(H["weather_code"][i])[0]}
+              for i in range(start, min(start + 8, len(times)))]
+    DD = d["daily"]
+    daily = [{"date": DD["time"][i],
+              "dow": DOW[time.strptime(DD["time"][i], "%Y-%m-%d").tm_wday],
+              "icon": _wmo(DD["weather_code"][i])[0],
+              "hi": round(DD["temperature_2m_max"][i]),
+              "lo": round(DD["temperature_2m_min"][i])} for i in range(len(DD["time"]))]
+    base.update({"temp": round(cur["temperature_2m"]), "icon": icon, "desc": desc,
+                 "feels": round(cur["apparent_temperature"]),
+                 "humidity": round(cur["relative_humidity_2m"]),
+                 "wind": round(cur["wind_speed_10m"]),
+                 "wind_unit": "mph" if imperial else "km/h",
+                 "hi": daily[0]["hi"] if daily else None,
+                 "lo": daily[0]["lo"] if daily else None,
+                 "hourly": hourly, "daily": daily, "source": "open-meteo",
+                 "sunrise": DD["sunrise"][0][11:16], "sunset": DD["sunset"][0][11:16]})
+    return base
+
+def _weather_nws(c, base):
+    # US National Weather Service fallback (no key, US-only). Used when Open-Meteo is
+    # unreachable. Same response shape as the Open-Meteo path.
+    units = "us" if c["unit"] == "F" else "si"
+    pts = _get_json("https://api.weather.gov/points/%s,%s" % (c["lat"], c["lon"]))
+    props = pts["properties"]
+    HH = _get_json(props["forecastHourly"] + "?units=" + units)["properties"]["periods"]
+    cur = HH[0]
+    hourly = [{"t": p["startTime"][11:16], "temp": round(p["temperature"]),
+               "icon": _icon_from_text(p.get("shortForecast"))} for p in HH[:8]]
+    # sunrise / sunset from isDaytime transitions in the next ~36h (for the auto theme)
+    rise = setpt = None
+    for i in range(1, min(len(HH), 36)):
+        if not HH[i - 1]["isDaytime"] and HH[i]["isDaytime"] and rise is None:
+            rise = HH[i]["startTime"][11:16]
+        if HH[i - 1]["isDaytime"] and not HH[i]["isDaytime"] and setpt is None:
+            setpt = HH[i]["startTime"][11:16]
+    # daily: NWS gives day/night periods; fold them into hi/lo per date
+    DD = _get_json(props["forecast"] + "?units=" + units)["properties"]["periods"]
+    days, order = {}, []
+    for p in DD:
+        dt = p["startTime"][:10]
+        if dt not in days:
+            days[dt] = {"hi": None, "lo": None, "icon": None}; order.append(dt)
+        rec = days[dt]
+        if p["isDaytime"]:
+            rec["hi"] = round(p["temperature"]); rec["icon"] = _icon_from_text(p.get("shortForecast"))
+        else:
+            rec["lo"] = round(p["temperature"])
+            if rec["icon"] is None: rec["icon"] = _icon_from_text(p.get("shortForecast"))
+    daily = []
+    for dt in order[:7]:
+        rec = days[dt]
+        hi = rec["hi"] if rec["hi"] is not None else rec["lo"]
+        lo = rec["lo"] if rec["lo"] is not None else rec["hi"]
+        daily.append({"date": dt, "dow": DOW[time.strptime(dt, "%Y-%m-%d").tm_wday],
+                      "icon": rec["icon"] or "cloud", "hi": hi, "lo": lo})
+    base.update({"temp": round(cur["temperature"]),
+                 "icon": _icon_from_text(cur.get("shortForecast")),
+                 "desc": cur.get("shortForecast") or "—",
+                 "hi": daily[0]["hi"] if daily else None,
+                 "lo": daily[0]["lo"] if daily else None,
+                 "hourly": hourly, "daily": daily, "source": "nws"})
+    if rise: base["sunrise"] = rise
+    if setpt: base["sunset"] = setpt
+    return base
+
+# Cache the last good forecast (keyed on unit+location) so the Car Thing's frequent
+# polls return instantly, and a circuit-breaker so a blocked Open-Meteo isn't retried
+# on every request (it just wastes seconds until it times out).
+_wx = {"data": None, "ts": 0, "key": None}
+_om_fail_until = 0
+WX_TTL = 150          # serve cached forecast for this many seconds
+OM_COOLDOWN = 600     # after Open-Meteo fails, skip it for this long (still retry NWS)
+
+def _compute_weather(c, base):
+    global _om_fail_until
+    providers = []
+    if time.time() >= _om_fail_until:
+        providers.append(_weather_openmeteo)     # primary, unless it's in cooldown
+    providers.append(_weather_nws)               # US fallback (reachable when OM is blocked)
+    errs = []
+    for fn in providers:
+        try:
+            return fn(c, dict(base))
+        except Exception as e:
+            if fn is _weather_openmeteo:
+                _om_fail_until = time.time() + OM_COOLDOWN
+            errs.append("%s: %s" % (fn.__name__.replace("_weather_", ""), e))
+    base.update({"temp": None, "icon": "cloud", "desc": "—",
+                 "hourly": [], "daily": [], "err": " | ".join(errs)})
+    return base
+
+def weather(force=False):
+    c = load_wconf()
     base = {"unit": c["unit"], "place": c["place"],
             "now": int(time.time() * 1000), "tzoff": tz_off_min()}
     ind = _read_indoor_c()
     if ind is not None:
-        base["indoor"] = round(ind * 9 / 5 + 32) if imperial else round(ind)
-    try:
-        url = ("https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s"
-               "&current=temperature_2m,apparent_temperature,relative_humidity_2m,"
-               "weather_code,wind_speed_10m"
-               "&hourly=temperature_2m,weather_code"
-               "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset"
-               "&forecast_days=7&timezone=auto"
-               "&temperature_unit=%s&wind_speed_unit=%s"
-               % (c["lat"], c["lon"], "fahrenheit" if imperial else "celsius",
-                  "mph" if imperial else "kmh"))
-        d = json.load(urllib.request.urlopen(
-            urllib.request.Request(url, headers={"User-Agent": "carthing-weatherstation/1.0"}),
-            timeout=8))
-        cur = d["current"]
-        icon, desc = _wmo(cur["weather_code"])
-        # hourly: the next 8 hours from "now"
-        H = d["hourly"]; times = H["time"]
-        nowiso = cur["time"][:13]
-        try: start = next(i for i, t in enumerate(times) if t[:13] >= nowiso)
-        except StopIteration: start = 0
-        hourly = [{"t": times[i][11:16], "temp": round(H["temperature_2m"][i]),
-                   "icon": _wmo(H["weather_code"][i])[0]}
-                  for i in range(start, min(start + 8, len(times)))]
-        DD = d["daily"]
-        daily = [{"date": DD["time"][i],
-                  "dow": DOW[time.strptime(DD["time"][i], "%Y-%m-%d").tm_wday],
-                  "icon": _wmo(DD["weather_code"][i])[0],
-                  "hi": round(DD["temperature_2m_max"][i]),
-                  "lo": round(DD["temperature_2m_min"][i])} for i in range(len(DD["time"]))]
-        base.update({"temp": round(cur["temperature_2m"]), "icon": icon, "desc": desc,
-                     "feels": round(cur["apparent_temperature"]),
-                     "humidity": round(cur["relative_humidity_2m"]),
-                     "wind": round(cur["wind_speed_10m"]),
-                     "wind_unit": "mph" if imperial else "km/h",
-                     "hi": daily[0]["hi"] if daily else None,
-                     "lo": daily[0]["lo"] if daily else None,
-                     "hourly": hourly, "daily": daily,
-                     "sunrise": DD["sunrise"][0][11:16], "sunset": DD["sunset"][0][11:16]})
-        return base
-    except Exception as e:
-        base.update({"temp": None, "icon": "cloud", "desc": "—",
-                     "hourly": [], "daily": [], "err": str(e)})
-        return base
+        base["indoor"] = round(ind * 9 / 5 + 32) if c["unit"] == "F" else round(ind)
+    key = (c["unit"], c["lat"], c["lon"])
+    if (not force and _wx["data"] and _wx["key"] == key
+            and time.time() - _wx["ts"] < WX_TTL and _wx["data"].get("temp") is not None):
+        data = dict(_wx["data"]); data.update(base); return data   # cached forecast, fresh clock/indoor
+    data = _compute_weather(c, base)
+    if data.get("temp") is not None:
+        _wx.update({"data": data, "ts": time.time(), "key": key})
+    return data
 
 def geocode(q):
     try:
@@ -322,6 +416,100 @@ def spotify_vol(v):
 def _qs(path):
     return urllib.parse.parse_qs(urllib.parse.urlparse(path).query)
 
+
+BIRD_API_URL = os.environ.get("BIRD_API_URL", "http://192.168.1.250:8090/api/detections")
+_bird_cache = {"at": 0.0, "payload": None}
+
+def bird():
+    """Latest bird detected by the BirdThing (BirdNET) Pi, proxied + cached."""
+    now = time.time()
+    if _bird_cache["payload"] is not None and now - _bird_cache["at"] < 25:
+        return _bird_cache["payload"]
+    out = {"ok": False, "name": None, "recent": False, "ago": None}
+    try:
+        d = json.load(urllib.request.urlopen(BIRD_API_URL, timeout=4))
+        rows = d.get("rows") or []
+        if rows:
+            row = rows[0]
+            out["name"] = row.get("com"); out["ok"] = True
+            api_now = d.get("now"); tzoff = float(d.get("tzoff") or 0)
+            try:
+                from datetime import datetime
+                ldt = datetime.strptime(row["date"] + " " + row["time"], "%Y-%m-%d %H:%M:%S")
+                row_ms = (ldt - datetime(1970, 1, 1)).total_seconds() * 1000
+                if api_now is not None:
+                    ago = ((float(api_now) + tzoff * 60000) - row_ms) / 1000.0
+                    out["ago"] = round(ago); out["recent"] = 0 <= ago < 900
+            except Exception:
+                pass
+    except Exception as e:
+        out["error"] = str(e)
+    _bird_cache["payload"] = out; _bird_cache["at"] = time.time()
+    return out
+
+
+PHOTO_UA = "WeatherThing/1.0 (nagarajan1295@gmail.com)"
+PHOTO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "birdphotos")
+_photo_mem = {}    # name -> (bytes, content_type)
+_photo_miss = {}   # name -> last-fail epoch (don't hammer Wikipedia on a miss)
+
+def _slug(name):
+    return "".join(c if c.isalnum() else "_" for c in name.lower()).strip("_") or "bird"
+
+def bird_photo(name):
+    """A real photo of the species, fetched from Wikipedia and cached (memory + disk).
+    The Car Thing has no internet of its own — it only reaches this Pi over Bluetooth —
+    so the Pi downloads the image and serves the bytes locally. Returns (bytes, ctype)
+    or None."""
+    name = (name or "").strip()
+    if not name:
+        return None
+    if name in _photo_mem:
+        return _photo_mem[name]
+    slug = _slug(name)
+    try:
+        for ext, ct in ((".jpg", "image/jpeg"), (".png", "image/png")):
+            fp = os.path.join(PHOTO_DIR, slug + ext)
+            if os.path.exists(fp):
+                with open(fp, "rb") as f:
+                    data = (f.read(), ct)
+                _photo_mem[name] = data
+                return data
+    except Exception:
+        pass
+    if name in _photo_miss and time.time() - _photo_miss[name] < 600:
+        return None
+    try:
+        api = ("https://en.wikipedia.org/w/api.php?action=query&prop=pageimages"
+               "&piprop=thumbnail&pithumbsize=500&format=json&redirects=1&titles="
+               + urllib.parse.quote(name))
+        d = json.load(urllib.request.urlopen(
+            urllib.request.Request(api, headers={"User-Agent": PHOTO_UA}), timeout=6))
+        src = None
+        for pg in d.get("query", {}).get("pages", {}).values():
+            src = (pg.get("thumbnail") or {}).get("source")
+            if src:
+                break
+        if not src:
+            _photo_miss[name] = time.time(); return None
+        r = urllib.request.urlopen(
+            urllib.request.Request(src, headers={"User-Agent": PHOTO_UA}), timeout=10)
+        body = r.read()
+        ct = (r.headers.get("Content-Type") or "image/jpeg").split(";")[0].strip()
+        ext = ".png" if "png" in ct else ".jpg"
+        try:
+            os.makedirs(PHOTO_DIR, exist_ok=True)
+            with open(os.path.join(PHOTO_DIR, slug + ext), "wb") as f:
+                f.write(body)
+        except Exception:
+            pass
+        _photo_mem[name] = (body, ct)
+        return (body, ct)
+    except Exception:
+        _photo_miss[name] = time.time()
+        return None
+
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def _send(self, code, ctype, body, cache=None):
@@ -355,6 +543,15 @@ class H(BaseHTTPRequestHandler):
             self._json(weather())
         elif p.startswith("/api/weather"):
             self._json(weather())
+        elif p.startswith("/api/bird/photo"):
+            nm = _qs(p).get("name", [""])[0] or (bird().get("name") or "")
+            ph = bird_photo(nm)
+            if ph:
+                self._send(200, ph[1], ph[0], cache="max-age=604800")
+            else:
+                self._send(404, "text/plain", b"no photo")
+        elif p.startswith("/api/bird"):
+            self._json(bird())
         elif p.startswith("/api/geocode"):
             self._json(geocode(_qs(p).get("q", [""])[0]))
         elif p.startswith("/api/spotify/cmd"):

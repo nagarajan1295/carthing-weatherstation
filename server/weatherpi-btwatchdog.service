@@ -1,0 +1,7 @@
+[Unit]
+Description=WeatherThing watchdog (weather API + Car Thing Bluetooth PAN link)
+After=weatherpi-btnap.service weatherstation-api.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/weatherstation/weatherpi-btwatchdog.sh

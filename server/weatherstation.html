@@ -10,7 +10,7 @@
   @font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url('/assets/inter-600.woff2') format('woff2');}
   @font-face{font-family:'Inter';font-weight:700;font-display:swap;src:url('/assets/inter-700.woff2') format('woff2');}
   :root{--bg:#08080a;--fg:#f4f4f6;--sec:#76767e;--dim:#4a4a52;
-    --hair:rgba(255,255,255,.08);--card:rgba(255,255,255,.045);--accent:#54c7ff;}
+    --hair:rgba(255,255,255,.08);--card:rgba(255,255,255,.045);--accent:#54c7ff;--uiscale:1;}
   body.light{--bg:#f6f6f7;--fg:#101013;--sec:#86868c;--dim:#b0b0b6;
     --hair:rgba(0,0,0,.09);--card:rgba(0,0,0,.04);--accent:#0a84ff;}
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -21,32 +21,34 @@
   .lbl{font-size:15px;font-weight:600;letter-spacing:2.5px;color:var(--sec);text-transform:uppercase;}
   /* pinned top bar */
   #top{position:fixed;top:0;left:0;width:800px;height:54px;z-index:50;background:var(--bg);
-    display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid var(--hair);}
-  #top .place{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--fg);}
-  #top .place svg{width:17px;height:17px;color:var(--sec);}
-  #top .ttime{display:flex;align-items:baseline;gap:18px;}
-  #top .tdate{font-size:20px;color:var(--sec);font-weight:600;letter-spacing:.5px;}
-  #top #tClock{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;}
-  #top #tAp{font-size:16px;color:var(--sec);font-weight:600;margin-left:-10px;}
-  body:not(.ovl) #top .ttime{visibility:hidden;}
+    display:flex;align-items:center;justify-content:flex-end;padding:0 30px;border-bottom:1px solid transparent;}
+  body.ovl #top{border-bottom-color:var(--hair);}
+  body:not(.ovl) #top{display:none;}                 /* no empty bar / border on the home page */
+  body.ovl #home{visibility:hidden;}                 /* don't bleed the big home clock through overlays */
+  #top .ttime{display:flex;align-items:center;}
+  #top .tdate{font-size:18px;color:var(--sec);font-weight:600;letter-spacing:.5px;margin-right:18px;}
+  #top #tClock{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;}
+  #top #tAp{font-size:14px;color:var(--sec);font-weight:600;margin-left:5px;}
   /* HOME */
-  #home{position:absolute;inset:0;padding-top:54px;display:flex;flex-direction:column;}
-  .hmain{flex:1;min-height:0;display:flex;align-items:center;padding:0 34px;gap:24px;}
-  .hclock{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
-  #hClock{font-size:150px;font-weight:600;line-height:.9;letter-spacing:-6px;font-variant-numeric:tabular-nums;white-space:nowrap;}
-  #hClock .ap{font-size:46px;color:var(--sec);font-weight:500;margin-left:12px;letter-spacing:-1px;}
-  #hDate{font-size:23px;font-weight:600;letter-spacing:2px;color:var(--sec);text-transform:uppercase;margin-top:16px;}
-  #hPlace{display:flex;align-items:center;gap:7px;font-size:18px;font-weight:500;color:var(--sec);margin-top:7px;}
-  #hPlace svg{width:16px;height:16px;}
-  .hwx{width:300px;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;text-align:right;}
-  .hwx-top{display:flex;align-items:center;gap:14px;}
-  .hwx-top .ic{font-size:78px;color:var(--fg);}
-  .hwx-temp{font-size:94px;font-weight:600;letter-spacing:-4px;line-height:1;}
-  .hwx-desc{font-size:25px;font-weight:500;color:var(--fg);margin-top:6px;}
-  .hwx-hl{font-size:19px;font-weight:600;color:var(--sec);margin-top:10px;letter-spacing:1px;font-variant-numeric:tabular-nums;}
+  #home{position:absolute;inset:0;padding-top:18px;display:flex;flex-direction:column;}
+  .hmain{flex:1;min-height:0;display:flex;align-items:center;padding:0 40px;gap:30px;}
+  .hleft{flex:1;min-width:0;align-self:stretch;display:flex;flex-direction:column;justify-content:flex-start;padding-top:6px;}
+  #hClock{font-size:calc(124px * var(--uiscale));font-weight:600;line-height:.9;letter-spacing:-5px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  #hClock .ap{font-size:calc(42px * var(--uiscale));color:var(--sec);font-weight:500;margin-left:10px;letter-spacing:-1px;}
+  #hDate{font-size:calc(27px * var(--uiscale));font-weight:600;letter-spacing:1.5px;color:var(--sec);text-transform:uppercase;margin-top:8px;}
+  .hwx{display:flex;flex-direction:column;align-items:flex-start;text-align:left;margin-top:24px;}
+  .hwx-top{display:flex;align-items:center;gap:16px;}
+  .hwx-top .ic{font-size:calc(66px * var(--uiscale));line-height:1;}
+  .hwx-temp{font-size:calc(74px * var(--uiscale));font-weight:600;letter-spacing:-3px;line-height:1;}
+  .hwx-desc{font-size:calc(21px * var(--uiscale));font-weight:500;color:var(--fg);margin-top:4px;}
+  .hwx-hl{font-size:calc(18px * var(--uiscale));font-weight:600;color:var(--sec);margin-top:8px;letter-spacing:1px;font-variant-numeric:tabular-nums;}
   .hwx-hl b{color:var(--fg);}
-  .hwx-indoor{display:flex;align-items:baseline;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid var(--hair);width:100%;justify-content:flex-end;}
-  .hwx-indoor .v{font-size:34px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;}
+  .hwx-indoor{display:flex;align-items:baseline;gap:12px;margin-top:14px;}
+  .hwx-indoor .lbl{font-size:calc(18px * var(--uiscale));}
+  .hwx-indoor .v{font-size:calc(60px * var(--uiscale));font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1;}
+  /* analog clock (right) */
+  .hright{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:300px;}
+  #aclock{width:292px;height:292px;}
   .hourly{flex:0 0 auto;display:flex;gap:1px;padding:0 28px 16px;}
   .hcell{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px 2px;}
   .hcell .ht{font-size:15px;color:var(--sec);font-weight:600;letter-spacing:.5px;}
@@ -66,6 +68,25 @@
   .drow .di{font-size:34px;color:var(--fg);}
   .drow .dr{margin-left:auto;font-size:25px;font-weight:600;font-variant-numeric:tabular-nums;}
   .drow .dr .lo{color:var(--sec);margin-left:16px;}
+  /* hourly graph */
+  #graph .vbody{display:flex;flex-direction:column;}
+  #gWrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px 0 16px;}
+  #gSvg{width:100%;height:auto;}
+  .hcell{cursor:pointer;}
+  /* mood / flash light */
+  #light{position:fixed;inset:0;z-index:60;display:none;}
+  #light.show{display:block;}
+  #lightFill{position:absolute;inset:0;transition:background .15s linear;}
+  #lightPanel{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;flex-direction:column;
+    gap:14px;align-items:center;background:rgba(18,18,20,.72);border-radius:22px;padding:16px 22px;}
+  #lightSw{display:flex;gap:13px;}
+  .sw{width:46px;height:46px;border-radius:50%;border:2px solid rgba(255,255,255,.45);transition:transform .12s;}
+  .sw.on{border-color:#fff;transform:scale(1.14);}
+  #lightPanel .row{display:flex;align-items:center;gap:14px;width:600px;}
+  #lightPanel .row .lbl{color:#fff;}
+  #lBar{flex:1;height:30px;background:rgba(255,255,255,.18);border-radius:8px;overflow:hidden;}
+  #lFill{height:100%;width:100%;background:#fff;}
+  #lClose{color:#fff;background:rgba(255,255,255,.22);border-radius:11px;padding:10px 20px;font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
   /* settings */
   .srow{display:flex;flex-direction:column;gap:14px;padding:20px 2px;border-bottom:1px solid var(--hair);}
   .seg{display:flex;background:var(--card);border-radius:13px;padding:5px;gap:5px;width:max-content;}
@@ -91,26 +112,85 @@
   .key:active{background:var(--hair);}
   .key.wide{flex:2.4;}
   button:active,.res:active{transform:scale(.98);}
+  /* Morning bird card — the bird BirdNET is hearing, shown in the open space between
+     the weather block (left) and the analog clock (right), with a small bird image. */
+  .birdcard{position:absolute;left:266px;top:172px;z-index:6;width:184px;
+    display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;
+    padding:11px 14px 13px;border-radius:16px;
+    background:rgba(48,209,88,0.10);border:1px solid rgba(48,209,88,0.26);}
+  .birdcard[hidden]{display:none;}
+  .bc-txt{font-size:16px;font-weight:600;color:#8fe3ad;line-height:1.18;}
+  .bc-txt .note{margin-right:5px;display:inline-block;animation:bnote 1.6s ease-in-out infinite;}
+  .bc-img{width:100%;display:flex;align-items:center;justify-content:center;color:#34c759;line-height:0;}
+  #birdPhoto{width:156px;height:94px;object-fit:cover;border-radius:12px;display:none;}
+  #birdFallback{width:76px;height:auto;display:block;}
+  body.light .bc-txt{color:#1f8a44;}
+  @keyframes bnote{0%,100%{opacity:.55;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+  /* Bluetooth status glyph — top-right corner, iPhone status-bar style */
+  #btStatus{position:fixed;top:13px;right:14px;z-index:60;width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;transition:opacity .3s ease;}
+  #btStatus svg{width:22px;height:22px;}
+  #btStatus.on{opacity:1;color:var(--accent);}
+  #btStatus.off{opacity:.5;color:var(--dim);}
+  #btStatus .slash{display:none;}
+  #btStatus.off .slash{display:block;}
+  body.ovl #top{padding-right:52px;}   /* keep the overlay clock clear of the BT glyph */
+  /* pull-to-refresh pill */
+  #ptr{position:fixed;top:6px;left:50%;transform:translate(-50%,0);background:var(--card);color:var(--fg);
+    padding:10px 20px;border-radius:22px;opacity:0;z-index:99998;transition:opacity .15s;font-size:16px;
+    pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.4);}
 </style>
 </head>
 <body>
+<div id="btStatus" class="off" title="Bluetooth">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.5 6.5 L17.5 17.5 L12 23 L12 1 L17.5 6.5 L6.5 17.5"/>
+    <line class="slash" x1="3" y1="21" x2="21" y2="3" stroke="var(--dim)"/>
+  </svg>
+</div>
 <div id="top">
-  <div class="place"><span id="tPin"></span><span id="tPlace">—</span></div>
+  <div class="place"></div>
   <div class="ttime"><span class="tdate" id="tDate">—</span><span id="tClock">--:--</span><span id="tAp"></span></div>
 </div>
 
 <div id="home">
   <div class="hmain">
-    <div class="hclock">
+    <div class="hleft">
       <div id="hClock">--:--</div>
       <div id="hDate">—</div>
-      <div id="hPlace"><span id="hPin"></span><span id="hPlaceName">—</span></div>
+      <div class="hwx">
+        <div class="hwx-top"><span class="ic" id="cwIcon"></span><span class="hwx-temp" id="cwTemp">--&deg;</span></div>
+        <div class="hwx-desc" id="cwDesc">Connecting</div>
+        <div class="hwx-hl" id="cwHL"></div>
+        <div class="hwx-indoor"><span class="lbl">Indoor</span><span class="v" id="cwIndoor">--&deg;</span></div>
+      </div>
     </div>
-    <div class="hwx">
-      <div class="hwx-top"><span class="ic" id="cwIcon"></span><span class="hwx-temp" id="cwTemp">--&deg;</span></div>
-      <div class="hwx-desc" id="cwDesc">Connecting</div>
-      <div class="hwx-hl" id="cwHL"></div>
-      <div class="hwx-indoor"><span class="lbl">Indoor</span><span class="v" id="cwIndoor">--&deg;</span></div>
+    <div class="hright">
+      <svg id="aclock" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="97" fill="none" stroke="var(--hair)" stroke-width="1.5"/>
+        <g id="acTicks"></g>
+        <line id="acHour" x1="100" y1="100" x2="100" y2="54" stroke="var(--fg)" stroke-width="6" stroke-linecap="round"/>
+        <line id="acMin" x1="100" y1="100" x2="100" y2="34" stroke="var(--fg)" stroke-width="4" stroke-linecap="round"/>
+        <line id="acSec" x1="100" y1="113" x2="100" y2="28" stroke="#ff453a" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="100" cy="100" r="5.5" fill="var(--fg)"/>
+        <circle cx="100" cy="100" r="2.6" fill="#ff453a"/>
+      </svg>
+    </div>
+  </div>
+  <div class="birdcard" id="birdBanner" hidden>
+    <div class="bc-txt"><span class="note">&#9834;</span><span id="birdText"></span></div>
+    <div class="bc-img">
+      <img id="birdPhoto" alt="">
+      <svg id="birdFallback" viewBox="0 0 64 50" fill="none">
+        <polygon points="6,20 25,26 21,35" fill="currentColor"/>
+        <ellipse cx="34" cy="27" rx="18" ry="13" fill="currentColor"/>
+        <circle cx="48" cy="18" r="8" fill="currentColor"/>
+        <polygon points="56,16 64,19 56,22" fill="#ffb020"/>
+        <ellipse cx="31" cy="28" rx="9" ry="6" fill="rgba(0,0,0,.18)"/>
+        <circle cx="50" cy="16" r="1.8" fill="#0c1a12"/>
+        <line x1="33" y1="39" x2="33" y2="46" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        <line x1="40" y1="39" x2="40" y2="46" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      </svg>
     </div>
   </div>
   <div class="hourly" id="hourly"></div>
@@ -143,6 +223,10 @@
     <div class="srow"><span class="lbl">Appearance</span>
       <div class="seg"><button onclick="setTheme('auto')" data-th="auto">Auto</button><button onclick="setTheme('dark')" data-th="dark">Dark</button><button onclick="setTheme('light')" data-th="light">Light</button></div>
       <div class="about" id="thHint" style="padding:2px 0 0"></div></div>
+    <div class="srow"><span class="lbl">Text Size <span id="tsPct" style="color:var(--fg);font-weight:600;letter-spacing:0"></span></span>
+      <div class="bwrap"><button class="bbtn" onclick="scaleStep(-1)">&minus;</button>
+        <button class="bbtn" onclick="scaleStep(1)">+</button>
+        <button class="bbtn" style="width:auto;padding:13px 20px;font-size:19px" onclick="setScale(1)">Reset</button></div></div>
     <div class="srow"><span class="lbl">Brightness <span id="bpct" style="color:var(--fg);font-weight:600;letter-spacing:0"></span></span>
       <div class="bwrap"><button class="bbtn" id="bAuto" style="width:auto;padding:13px 18px;font-size:20px" onclick="setAuto(!brightAuto)">Auto</button>
         <button class="bbtn" onclick="brightStep(-10)">&minus;</button>
@@ -152,28 +236,44 @@
   </div>
 </div>
 
+<div id="graph" class="view">
+  <div class="vclose" onclick="closeView('graph')">Back</div>
+  <div class="vtitle">Hourly Forecast</div>
+  <div class="vbody"><div id="gWrap"><svg id="gSvg" viewBox="0 0 760 300"></svg></div></div>
+</div>
+
+<div id="light">
+  <div id="lightFill"></div>
+  <div id="lightPanel">
+    <div id="lightSw"></div>
+    <div class="row"><span class="lbl">Brightness</span><div id="lBar" onclick="lBarTap(event)"><div id="lFill"></div></div>
+      <div id="lClose" onclick="closeView('light')">Done</div></div>
+  </div>
+</div>
+
 <script>
-const VERSION="3.0", BR_FLOOR=30;
+const VERSION="3.4", BR_FLOOR=30;
 const CT="http://127.0.0.1:8091";
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-// ---- line-SVG weather icons (monochrome, scale with font-size) ----
-function svg(p){return '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
-const PIN=svg('<path d="M20 10c0 4.4-8 12-8 12s-8-7.6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/>');
+const FDAY=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const FMON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+// ---- colored weather icons (multi-tone, scale with font-size) ----
+const SUN='#ffd60a',CL='#dfe4ec',CLN='#aeb6c2',DROP='#4aa8ff',FLAKE='#ffffff',BOLT='#ffd60a',MOONC='#e6ebf7';
+function csvg(inner){return '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';}
 const WI={
-  clear:svg('<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>'),
-  moon:svg('<path d="M20 14.3A8 8 0 0 1 9.7 4 8 8 0 1 0 20 14.3Z"/>'),
-  partly:svg('<path d="M12 3v1.5M5.5 5.5l1 1M3.5 12H5M18.5 5.5l-1 1M20.5 12H19"/><path d="M14.5 10.5a3.5 3.5 0 1 0-5 4"/><path d="M16.5 19H8a4 4 0 1 1 .9-7.9A5.5 5.5 0 0 1 19.6 12 3.5 3.5 0 0 1 16.5 19Z"/>'),
-  cloud:svg('<path d="M17.5 19H8a5.5 5.5 0 1 1 1.1-10.9A6.5 6.5 0 0 1 20.5 11 3.75 3.75 0 0 1 17.5 19Z"/>'),
-  fog:svg('<path d="M4.5 13.9A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 2.2 7.3"/><path d="M16 17.5H7M17 20.5H9"/>'),
-  drizzle:svg('<path d="M4.5 13.9A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 2.2 7.3"/><path d="M8 18.5v1M12 19.5v1M16 18.5v1"/>'),
-  rain:svg('<path d="M4.5 13.9A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 2.2 7.3"/><path d="M8 18v3M12 18v3M16 18v3"/>'),
-  snow:svg('<path d="M4.5 13.9A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 2.2 7.3"/><path d="M8 18h.01M8 21h.01M12 19h.01M12 22h.01M16 18h.01M16 21h.01"/>'),
-  storm:svg('<path d="M6 15.5A6 6 0 1 1 15 8.5h1.5a4 4 0 0 1 .5 8"/><path d="m12.5 13-2.5 4h3l-2.5 4"/>')
+  clear:csvg('<g stroke="'+SUN+'" stroke-width="1.8"><path d="M12 2.4v2.3M12 19.3v2.3M4.4 4.4 6 6M18 18l1.6 1.6M2.4 12h2.3M19.3 12h2.3M4.4 19.6 6 18M18 6l1.6-1.6"/></g><circle cx="12" cy="12" r="4.4" fill="'+SUN+'" stroke="'+SUN+'" stroke-width="1.8"/>'),
+  moon:csvg('<path d="M20 14.3A8 8 0 0 1 9.7 4 8 8 0 1 0 20 14.3Z" fill="'+MOONC+'" stroke="'+MOONC+'" stroke-width="1.4"/>'),
+  partly:csvg('<g stroke="'+SUN+'" stroke-width="1.6"><path d="M7.5 2.4v1.7M2.5 7.5h1.7M3.6 3.6 4.8 4.8M12.5 7.5h-1.7M11.4 3.6 10.2 4.8"/></g><circle cx="7.5" cy="7.5" r="2.9" fill="'+SUN+'" stroke="'+SUN+'" stroke-width="1.6"/><path d="M17.5 20H8.2a4.4 4.4 0 1 1 .9-8.7A5.4 5.4 0 0 1 20 13.4 3.2 3.2 0 0 1 17.5 20Z" fill="'+CL+'" stroke="'+CLN+'" stroke-width="1.2"/>'),
+  cloud:csvg('<path d="M17.5 18.5H8a5.3 5.3 0 1 1 1.1-10.5A6.3 6.3 0 0 1 20.3 10.6 3.6 3.6 0 0 1 17.5 18.5Z" fill="'+CL+'" stroke="'+CLN+'" stroke-width="1.2"/>'),
+  fog:csvg('<path d="M17.5 13.5H8a5.3 5.3 0 1 1 1.1-10.5A6.3 6.3 0 0 1 20.3 5.6 3.6 3.6 0 0 1 17.5 13.5Z" fill="'+CL+'" stroke="'+CLN+'" stroke-width="1.2"/><g stroke="'+CLN+'" stroke-width="1.8"><path d="M5 17.5h11M7 20.5h8"/></g>'),
+  drizzle:csvg('<path d="M17.5 14.5H8a5.3 5.3 0 1 1 1.1-10.5A6.3 6.3 0 0 1 20.3 6.6 3.6 3.6 0 0 1 17.5 14.5Z" fill="'+CL+'" stroke="'+CLN+'" stroke-width="1.2"/><g stroke="'+DROP+'" stroke-width="2"><path d="M9 18v1.6M13 18v1.6M17 18v1.6"/></g>'),
+  rain:csvg('<path d="M17.5 14H8a5.3 5.3 0 1 1 1.1-10.5A6.3 6.3 0 0 1 20.3 6.1 3.6 3.6 0 0 1 17.5 14Z" fill="'+CL+'" stroke="'+CLN+'" stroke-width="1.2"/><g stroke="'+DROP+'" stroke-width="2"><path d="M9 17.5v3M13 17.5v3M17 17.5v3"/></g>'),
+  snow:csvg('<path d="M17.5 14H8a5.3 5.3 0 1 1 1.1-10.5A6.3 6.3 0 0 1 20.3 6.1 3.6 3.6 0 0 1 17.5 14Z" fill="'+CL+'" stroke="'+CLN+'" stroke-width="1.2"/><g stroke="'+FLAKE+'" stroke-width="2.2"><path d="M9 18h.01M9 20.6h.01M13 18.7h.01M13 21.3h.01M17 18h.01M17 20.6h.01"/></g>'),
+  storm:csvg('<path d="M17.5 13.5H8a5.3 5.3 0 1 1 1.1-10.5A6.3 6.3 0 0 1 20.3 5.6 3.6 3.6 0 0 1 17.5 13.5Z" fill="'+CLN+'" stroke="#97a0ad" stroke-width="1.2"/><path d="M12.5 12.5 10.2 16.5h3l-2.3 4" fill="none" stroke="'+BOLT+'" stroke-width="2"/>')
 };
 WI.mclear=WI.clear;
 function wicon(key,allowMoon){if(allowMoon&&(key==='clear'||key==='mclear')&&isNight())return WI.moon;return WI[key]||WI.cloud;}
-document.getElementById('tPin').innerHTML=PIN;document.getElementById('hPin').innerHTML=PIN;
 // ---- Pi-authoritative clock ----
 let srvOffMs=null,tzOffMin=-(new Date().getTimezoneOffset()),haveTime=false;
 function setSrvTime(n,tz){if(n){srvOffMs=n-Date.now();haveTime=true;}if(typeof tz==='number')tzOffMin=tz;}
@@ -188,49 +288,146 @@ function tick(){
   const d=nowD();let h=d.getUTCHours();const ap=h<12?'AM':'PM';const hh=(h%12)||12;const mm=two(d.getUTCMinutes());
   document.getElementById('hClock').innerHTML=hh+':'+mm+'<span class="ap">'+ap+'</span>';
   document.getElementById('tClock').textContent=hh+':'+mm;document.getElementById('tAp').textContent=ap;
-  const ds=DAYS[d.getUTCDay()]+', '+MON[d.getUTCMonth()]+' '+d.getUTCDate();
-  document.getElementById('hDate').textContent=ds;document.getElementById('tDate').textContent=ds;
+  document.getElementById('hDate').textContent=FDAY[d.getUTCDay()]+', '+d.getUTCDate()+' '+FMON[d.getUTCMonth()];
+  document.getElementById('tDate').textContent=DAYS[d.getUTCDay()]+' '+d.getUTCDate()+' '+MON[d.getUTCMonth()];
   applyThemeAuto();autoApply();
 }
 setInterval(tick,1000);
-async function syncTime(){try{const t=await (await fetch('/api/time',{cache:'no-store'})).json();setSrvTime(t.now,t.tzoff);tick();}catch(e){}}
+// ---- analog clock (right side, sweeping second hand) ----
+(function(){const g=document.getElementById('acTicks');if(!g)return;let s='';
+  for(let i=0;i<60;i++){const a=i*6*Math.PI/180,big=i%5===0,r1=big?85:89,r2=97;
+    const x1=(100+r1*Math.sin(a)).toFixed(1),y1=(100-r1*Math.cos(a)).toFixed(1),x2=(100+r2*Math.sin(a)).toFixed(1),y2=(100-r2*Math.cos(a)).toFixed(1);
+    s+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(big?'var(--fg)':'var(--sec)')+'" stroke-width="'+(big?2.4:1)+'"/>';}
+  g.innerHTML=s;})();
+function setHand(id,deg){const e=document.getElementById(id);if(e)e.setAttribute('transform','rotate('+deg.toFixed(2)+' 100 100)');}
+function drawClock(){if(!haveTime)return;const d=nowD();
+  const s=d.getUTCSeconds()+d.getUTCMilliseconds()/1000,m=d.getUTCMinutes()+s/60,h=(d.getUTCHours()%12)+m/60;
+  setHand('acHour',h*30);setHand('acMin',m*6);setHand('acSec',s*6);}
+setInterval(drawClock,200);drawClock();
+async function syncTime(){try{const t=await (await fetch('/api/time',{cache:'no-store'})).json();setSrvTime(t.now,t.tzoff);tick();try{loadBird();}catch(e){}}catch(e){}}
 syncTime();setInterval(syncTime,30000);
+// ---- Bluetooth link status (top-right glyph). Everything the page fetches rides the
+// BT PAN link to the Pi, so a successful heartbeat == BT connected. ----
+function setBt(on){const e=document.getElementById('btStatus');if(e)e.className=on?'on':'off';}
+async function btPing(){
+  try{const c=new AbortController();const t=setTimeout(()=>c.abort(),4000);
+    const r=await fetch('/api/time',{cache:'no-store',signal:c.signal});clearTimeout(t);setBt(r.ok);}
+  catch(e){setBt(false);}
+}
+btPing();setInterval(btPing,5000);
 // ---- Weather ----
-let unit='C',_cwKey='';
+let unit='C',_cwKey='',lastWx=null;
 async function fetchWeather(){
   try{
     const w=await (await fetch('/api/weather',{cache:'no-store'})).json();
+    lastWx=w;
     if(w.now)setSrvTime(w.now,w.tzoff);
     if(w.sunrise)sun={rise:w.sunrise,set:w.sunset};
     unit=w.unit||'C';markUnit();
-    document.getElementById('tPlace').textContent=w.place||'—';
-    document.getElementById('hPlaceName').textContent=w.place||'—';
     document.getElementById('cwTemp').innerHTML=(w.temp==null?'--':w.temp)+'&deg;';
     document.getElementById('cwDesc').textContent=w.temp==null?'Connecting':(w.desc||'—');
     document.getElementById('cwHL').innerHTML=(w.temp==null)?'':('H <b>'+w.hi+'&deg;</b>&nbsp;&nbsp;&nbsp;L <b>'+w.lo+'&deg;</b>');
     document.getElementById('cwIndoor').innerHTML=(w.indoor!=null)?(w.indoor+'&deg;'):'--&deg;';
     document.getElementById('cwIcon').innerHTML=wicon(w.icon||'cloud',true);
-    document.getElementById('tPlace').dataset.x='';
     const H=document.getElementById('hourly');H.innerHTML='';
     (w.hourly||[]).slice(0,7).forEach(h=>{const c=document.createElement('div');c.className='hcell';
-      c.innerHTML='<div class="ht">'+hr12(h.t)+'</div><div class="ic">'+wicon(h.icon)+'</div><div class="hd">'+h.temp+'&deg;</div>';H.appendChild(c);});
+      c.innerHTML='<div class="ht">'+hr12(h.t)+'</div><div class="ic">'+wicon(h.icon)+'</div><div class="hd">'+h.temp+'&deg;</div>';
+      c.onclick=()=>openView('graph');H.appendChild(c);});
     renderForecast(w.daily||[]);
     applyThemeAuto();
   }catch(e){document.getElementById('cwDesc').textContent='Connecting';}
 }
 fetchWeather();setInterval(fetchWeather,180000);
+// ---- Morning bird banner (mirrors the bird BirdThing/BirdNET is hearing) ----
+var BIRD_VERBS={owl:'is calling',hawk:'is calling',falcon:'is calling',crow:'is cawing',raven:'is calling',jay:'is calling',woodpecker:'is drumming',dove:'is cooing',goose:'is honking',duck:'is quacking',chickadee:'is chattering',nuthatch:'is calling'};
+function birdVerb(n){n=(n||'').toLowerCase();for(var k in BIRD_VERBS){if(n.indexOf(k)>=0)return BIRD_VERBS[k];}return 'is singing';}
+function isMorning(){var h=nowD().getUTCHours();return h>=5&&h<11;}
+var _lastBird='';
+function setBirdPhoto(nm){var img=document.getElementById('birdPhoto'),fb=document.getElementById('birdFallback');
+  img.style.display='none';fb.style.display='block';if(!nm)return;   // show icon until the photo loads
+  img.onload=function(){img.style.display='block';fb.style.display='none';};
+  img.onerror=function(){img.style.display='none';fb.style.display='block';};
+  img.src='/api/bird/photo?name='+encodeURIComponent(nm);}
+async function loadBird(){var el=document.getElementById('birdBanner');if(!el)return;
+  var test=location.search.indexOf('birdtest')>=0;
+  if(!test&&(!haveTime||!isMorning())){el.hidden=true;return;}
+  try{var d=await(await fetch('/api/bird',{cache:'no-store'})).json();
+    if(d&&d.ok&&d.name&&(d.recent||test)){document.getElementById('birdText').textContent=d.name+' '+birdVerb(d.name);el.hidden=false;
+      if(d.name!==_lastBird){_lastBird=d.name;setBirdPhoto(d.name);}}
+    else{el.hidden=true;}
+  }catch(e){el.hidden=true;}}
+loadBird();setInterval(loadBird,30000);
+// ---- Pull-to-refresh (CT touchscreen = USB HID mouse, so native touch scroll never fires) ----
+(function(){
+  var ptr=document.createElement('div');ptr.id='ptr';ptr.textContent='↻ Release to refresh';
+  document.body.appendChild(ptr);
+  var down=false,sy=0,el=null,pull=0,moved=0,st=0;
+  function scrollableFrom(t){for(;t&&t!==document.body;t=t.parentElement){var s=getComputedStyle(t);
+    if((s.overflowY==='auto'||s.overflowY==='scroll')&&t.scrollHeight>t.clientHeight+4)return t;}return null;}
+  document.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse')return;
+    if(e.target.closest('.slider,#lBar,#bbar,#qbox'))return;
+    down=true;sy=e.clientY;moved=0;pull=0;el=scrollableFrom(e.target);st=el?el.scrollTop:0;
+    if(el)el.style.scrollBehavior='auto';},true);
+  document.addEventListener('pointermove',function(e){if(!down)return;
+    var dy=e.clientY-sy;moved=Math.max(moved,Math.abs(dy));
+    if(el){el.scrollTop=st-dy;}
+    else if(dy>0&&!curOverlay()){pull=dy;
+      ptr.style.opacity=Math.min(1,dy/130);ptr.style.transform='translate(-50%,'+Math.min(56,dy/2.4)+'px)';}
+  },true);
+  function end(){if(pull>130)location.reload();
+    if(el)el.style.scrollBehavior='';
+    down=false;el=null;pull=0;ptr.style.opacity=0;ptr.style.transform='translate(-50%,0)';}
+  document.addEventListener('pointerup',end,true);
+  document.addEventListener('pointercancel',end,true);
+  document.addEventListener('click',function(e){if(moved>14){e.stopPropagation();e.preventDefault();moved=0;}},true);
+})();
 function hr12(t){let h=parseInt((t||'0:0').split(':')[0]);const ap=h<12?'a':'p';h=h%12;if(h===0)h=12;return h+ap;}
 function renderForecast(d){const b=document.getElementById('fcBody');if(!d.length){b.innerHTML='<div class="about">No forecast.</div>';return;}
   b.innerHTML=d.map((x,i)=>`<div class="drow"><div class="dw">${i===0?'Today':x.dow}</div><div class="di">${wicon(x.icon)}</div><div class="dr">${x.hi}&deg;<span class="lo">${x.lo}&deg;</span></div></div>`).join('');}
 // ---- views + knob nav ----
-const OVL=['forecast','loc','settings'];
+const OVL=['forecast','loc','settings','graph','light'];
 function curOverlay(){return OVL.find(id=>document.getElementById(id).classList.contains('show'));}
 function syncOvl(){document.body.classList.toggle('ovl',!!curOverlay());}
 function openView(id){closeAll();document.getElementById(id).classList.add('show');syncOvl();
-  if(id==='settings'){markUnit();markTheme();applyBright();markBrightAuto();setSel=0;sliderActive=false;setTimeout(setHi,40);document.getElementById('about').innerHTML='Car Thing Weather Station · v'+VERSION;}
-  if(id==='loc')openLoc();}
-function closeView(id){document.getElementById(id).classList.remove('show');syncOvl();}
-function closeAll(){OVL.forEach(id=>document.getElementById(id).classList.remove('show'));syncOvl();}
+  if(id==='settings'){markUnit();markTheme();applyBright();markBrightAuto();applyScale();setSel=0;sliderActive=false;setTimeout(setHi,40);document.getElementById('about').innerHTML='Car Thing Weather Station · v'+VERSION;}
+  if(id==='loc')openLoc();
+  if(id==='graph')renderGraph(lastWx?lastWx.hourly:[]);
+  if(id==='light')lightEnter();}
+function closeView(id){if(id==='light')lightExit();document.getElementById(id).classList.remove('show');syncOvl();}
+function closeAll(){if(document.getElementById('light').classList.contains('show'))lightExit();
+  OVL.forEach(id=>document.getElementById(id).classList.remove('show'));syncOvl();}
+function toggleTheme(){setTheme(document.body.classList.contains('light')?'dark':'light');}
+// ---- hourly graph (iPhone-style temperature curve) ----
+function renderGraph(hourly){const sv=document.getElementById('gSvg');hourly=(hourly||[]).slice(0,12);
+  if(hourly.length<2){sv.innerHTML='<text x="380" y="150" text-anchor="middle" fill="var(--sec)" font-size="20">No hourly data</text>';return;}
+  const W=760,H=300,pL=24,pR=24,pT=48,pB=40,n=hourly.length;
+  const temps=hourly.map(h=>+h.temp),mn=Math.min(...temps),mx=Math.max(...temps),rng=(mx-mn)||1;
+  const x=i=>pL+i*(W-pL-pR)/(n-1),y=t=>pT+(mx-t)/rng*(H-pT-pB);
+  let line='',area='M'+x(0).toFixed(1)+' '+(H-pB),pts='';
+  hourly.forEach((h,i)=>{const px=x(i),py=y(+h.temp);line+=(i?'L':'M')+px.toFixed(1)+' '+py.toFixed(1)+' ';area+='L'+px.toFixed(1)+' '+py.toFixed(1)+' ';
+    pts+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="3.4" fill="var(--accent)"/>'
+       +'<text x="'+px.toFixed(1)+'" y="'+(py-13).toFixed(1)+'" text-anchor="middle" font-size="18" font-weight="600" fill="var(--fg)">'+Math.round(h.temp)+'°</text>'
+       +'<text x="'+px.toFixed(1)+'" y="'+(H-12)+'" text-anchor="middle" font-size="14" font-weight="600" fill="var(--sec)">'+hr12(h.t)+'</text>';});
+  area+='L'+x(n-1).toFixed(1)+' '+(H-pB)+' Z';
+  sv.innerHTML='<defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity="0.32"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>'
+    +'<path d="'+area+'" fill="url(#gg)"/><path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+pts;}
+// ---- mood / flash light ----
+const LIGHTS=[{n:'Candle',c:[255,147,41],flick:true},{n:'Warm',c:[255,197,143]},{n:'White',c:[255,255,255]},
+  {n:'Amber',c:[255,176,0]},{n:'Red',c:[255,59,48]},{n:'Green',c:[52,199,89]},{n:'Cyan',c:[90,200,250]},
+  {n:'Blue',c:[10,132,255]},{n:'Pink',c:[255,55,150]},{n:'Purple',c:[175,82,222]}];
+let lightSel=0,lightBright=100,_prevBright=null,_flick=null;
+function buildLightSw(){const w=document.getElementById('lightSw');w.innerHTML='';
+  LIGHTS.forEach((L,i)=>{const d=document.createElement('div');d.className='sw'+(i===lightSel?' on':'');
+    d.style.background='rgb('+L.c.join(',')+')';d.onclick=()=>{lightSel=i;buildLightSw();applyLight();};w.appendChild(d);});}
+function paintLight(j){const L=LIGHTS[lightSel],f=lightBright/100*(j||1);
+  document.getElementById('lightFill').style.background='rgb('+Math.round(L.c[0]*f)+','+Math.round(L.c[1]*f)+','+Math.round(L.c[2]*f)+')';}
+function applyLight(){document.getElementById('lFill').style.width=lightBright+'%';paintLight(1);
+  clearInterval(_flick);_flick=null;if(LIGHTS[lightSel].flick)_flick=setInterval(()=>paintLight(0.8+Math.random()*0.2),120);
+  fetch(CT+'/bright?level=100').catch(()=>{});}            // panel full bright while the light is on
+function lBarTap(e){const r=document.getElementById('lBar').getBoundingClientRect();
+  lightBright=Math.max(15,Math.min(100,Math.round((e.clientX-r.left)/r.width*100)));applyLight();}
+function lightEnter(){_prevBright=brightPct;buildLightSw();applyLight();}
+function lightExit(){clearInterval(_flick);_flick=null;if(_prevBright!=null)fetch(CT+'/bright?level='+_prevBright).catch(()=>{});}
 let setSel=0,sliderActive=false;
 function setOpts(){return Array.from(document.querySelectorAll('#settings .vbody button, #settings .vbody .slider'));}
 function setHi(){const o=setOpts();o.forEach((b,i)=>b.classList.toggle('khi',i===setSel));const c=o[setSel];if(c)c.scrollIntoView({block:'nearest'});}
@@ -240,11 +437,16 @@ function setMove(d){const o=setOpts();if(!o.length)return;sliderActive=false;
 document.addEventListener('keydown',(ev)=>{
   const k=ev.key;
   if(k==='m'||k==='M'){if(!ev.repeat)toggleDisplay();return;}
-  if(k==='1'){closeAll();return;}
-  if(k==='2'){curOverlay()==='forecast'?closeAll():openView('forecast');return;}
-  if(k==='3'){curOverlay()==='settings'?closeAll():openView('settings');return;}
+  if(k==='5'){closeAll();return;}          // 5th button = Home
+  if(k==='1'){curOverlay()==='forecast'?closeAll():openView('forecast');return;}
+  if(k==='2'){toggleTheme();return;}
+  if(k==='3'){curOverlay()==='light'?closeAll():openView('light');return;}
   if(k==='4'){curOverlay()==='settings'?closeAll():openView('settings');return;}
   const v=curOverlay();
+  if(v==='light'){
+    if(k==='ArrowRight'||k==='ArrowDown'){lightSel=(lightSel+1)%LIGHTS.length;buildLightSw();applyLight();}
+    else if(k==='ArrowLeft'||k==='ArrowUp'){lightSel=(lightSel-1+LIGHTS.length)%LIGHTS.length;buildLightSw();applyLight();}
+    else if(k==='Escape'||k==='Backspace'||k==='Enter')closeView('light');return;}
   if(v==='settings'){
     const o=setOpts()[setSel];const onSlider=o&&o.classList.contains('slider');
     if(onSlider&&sliderActive){
@@ -291,6 +493,14 @@ function setTheme(m){themeMode=m;localStorage.setItem('themeMode',m);markTheme()
 function applyThemeAuto(){if(themeMode!=='auto')return;document.body.classList.toggle('light',haveTime&&sun.rise&&!isNight());}
 function markTheme(){document.querySelectorAll('[data-th]').forEach(b=>b.classList.toggle('on',b.dataset.th===themeMode));
   const h=document.getElementById('thHint');if(h)h.textContent=themeMode==='auto'?('Light by day, dark after sunset'+(sun.set?(' ('+sun.set+')'):'')):'';}
+// ---- text size (scales the home clock / weather / indoor via --uiscale) ----
+let uiScale=parseFloat(localStorage.getItem('uiScale')||'1')||1;
+function applyScale(){uiScale=Math.max(0.8,Math.min(1.4,Math.round(uiScale*10)/10));
+  document.documentElement.style.setProperty('--uiscale',uiScale);
+  localStorage.setItem('uiScale',uiScale);
+  const t=document.getElementById('tsPct');if(t)t.textContent=Math.round(uiScale*100)+'%';}
+function setScale(v){uiScale=v;applyScale();}
+function scaleStep(d){uiScale+=d*0.1;applyScale();}
 // ---- brightness (floor avoids the low-PWM flicker; debounced so the knob isn't laggy) ----
 let brightPct=parseInt(localStorage.getItem('brightPct')||'80')||80,brightAuto=localStorage.getItem('brightAuto')==='1',_lastAuto=-1,_brT=null;
 function applyBright(){brightPct=Math.max(BR_FLOOR,Math.min(100,brightPct));
@@ -298,7 +508,8 @@ function applyBright(){brightPct=Math.max(BR_FLOOR,Math.min(100,brightPct));
   const p=document.getElementById('bpct');if(p)p.textContent=brightPct+(brightAuto?'% · auto':'%');
   localStorage.setItem('brightPct',brightPct);
   clearTimeout(_brT);_brT=setTimeout(()=>fetch(CT+'/bright?level='+brightPct).catch(()=>{}),90);}
-function manualBright(v){brightAuto=false;localStorage.setItem('brightAuto','0');markBrightAuto();brightPct=v;applyBright();}
+function manualBright(v){brightAuto=false;localStorage.setItem('brightAuto','0');markBrightAuto();brightPct=v;applyBright();
+  dispOff=false;fetch(CT+'/display?on=1').catch(()=>{});}  // adjusting brightness always un-blanks the screen
 function brightStep(d){manualBright(brightPct+d);}
 function brightTap(e){const r=document.getElementById('bbar').getBoundingClientRect();manualBright(Math.round((e.clientX-r.left)/r.width*100));}
 function autoLevel(h){if(h>=8&&h<19)return 100;if(h>=6&&h<8)return 75;if(h>=19&&h<22)return 60;return 40;}
@@ -306,7 +517,8 @@ function autoApply(f){if(!brightAuto||!haveTime)return;const lvl=autoLevel(nowD(
   if(f||lvl!==_lastAuto){_lastAuto=lvl;brightPct=lvl;applyBright();}}
 function setAuto(on){brightAuto=on;localStorage.setItem('brightAuto',on?'1':'0');markBrightAuto();if(on)autoApply(true);}
 function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classList.toggle('on',brightAuto);}
-(function(){if(themeMode==='light')document.body.classList.add('light');markTheme();
+(function(){if(themeMode==='light')document.body.classList.add('light');markTheme();applyScale();
+  fetch(CT+'/display?on=1').catch(()=>{});  // clear any stale screen-blank flag on load
   setTimeout(()=>{markBrightAuto();if(brightAuto)autoApply(true);else applyBright();},1200);})();
 </script>
 </body>
