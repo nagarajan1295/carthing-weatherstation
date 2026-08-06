@@ -1,0 +1,13 @@
+[Unit]
+Description=Weather Station Bluetooth NAP for the Car Thing (spoofed MAC)
+After=bluetooth.service
+Wants=bluetooth.service
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/weatherstation/weatherpi-btnap.sh
+# bt-agent/bt-network ignore SIGTERM, so a restart used to sit in stop-sigterm for the full
+# 90s default before SIGKILL — that made every watchdog re-arm take ~2 min. Kill fast.
+TimeoutStopSec=10
+[Install]
+WantedBy=multi-user.target
