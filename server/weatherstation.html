@@ -521,5 +521,179 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
   fetch(CT+'/display?on=1').catch(()=>{});  // clear any stale screen-blank flag on load
   setTimeout(()=>{markBrightAuto();if(brightAuto)autoApply(true);else applyBright();},1200);})();
 </script>
+<!-- ANCS-NOTIFY-BEGIN -->
+<script>window.ANCS_URL='/api/notify';</script>
+<!-- ===== iPhone notification toast (ANCS) =====================================
+     Self-contained. Set window.ANCS_URL before this block to point at the
+     notification endpoint (the ANCS gateway on the BirdThing Pi, or a local
+     proxy of it). Polls, then slides a banner in for anything new.
+     Incoming calls stay up until the call ends; everything else auto-dismisses.
+     Canonical source: E:\BirdThing\ancs\notify_widget.html
+============================================================================ -->
+<style>
+  #ancsWrap{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;
+    flex-direction:column;align-items:center;gap:8px;padding:10px;
+    pointer-events:none;}
+  .ancs{pointer-events:auto;width:100%;max-width:720px;display:flex;
+    align-items:center;gap:14px;padding:12px 16px;border-radius:16px;
+    background:rgba(28,28,30,.92);color:#f5f5f7;
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 10px 34px rgba(0,0,0,.55);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    font-family:'Inter',-apple-system,system-ui,"Helvetica Neue",sans-serif;
+    transform:translateY(-140%);opacity:0;
+    transition:transform .34s cubic-bezier(.22,1,.36,1),opacity .34s;}
+  .ancs.in{transform:translateY(0);opacity:1;}
+  /* light styling: either the host page sets body.light (BirdThing /
+     WeatherThing convention) or the page is light-themed and sets
+     window.ANCS_THEME='light' (the bedroom kiosk, which has no body.light) */
+  body.light .ancs,.ancs.light{background:rgba(255,255,255,.94);color:#1c1c1e;
+    border-color:rgba(0,0,0,.10);box-shadow:0 10px 34px rgba(0,0,0,.22);}
+  .ancs-ico{flex:0 0 auto;width:40px;height:40px;border-radius:11px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:21px;background:rgba(255,255,255,.14);}
+  body.light .ancs-ico,.ancs.light .ancs-ico{background:rgba(0,0,0,.07);}
+  .ancs-body{flex:1 1 auto;min-width:0;}
+  .ancs-app{font-size:11px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;opacity:.62;margin-bottom:2px;}
+  .ancs-title{font-size:18px;font-weight:600;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;line-height:1.22;}
+  .ancs-msg{font-size:15px;opacity:.8;line-height:1.3;margin-top:2px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;}
+  /* incoming call: green, pulsing, and it stays until the call is over */
+  .ancs.call{border-color:rgba(48,209,88,.55);
+    box-shadow:0 10px 34px rgba(0,0,0,.55),0 0 0 1px rgba(48,209,88,.28) inset;}
+  .ancs.call.light{box-shadow:0 10px 34px rgba(0,0,0,.22),
+    0 0 0 1px rgba(40,167,69,.30) inset;}
+  .ancs.call .ancs-ico{background:rgba(48,209,88,.22);color:#30d158;
+    animation:ancsPulse 1.5s ease-in-out infinite;}
+  @keyframes ancsPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.13);}}
+  @media (prefers-reduced-motion:reduce){
+    .ancs{transition:opacity .2s;transform:none;}
+    .ancs.call .ancs-ico{animation:none;}
+  }
+</style>
+<script>
+(function(){
+  var URL_ = window.ANCS_URL || '/api/notify';
+  var POLL = window.ANCS_POLL_MS || 2500;
+  var HOLD = window.ANCS_HOLD_MS || 9000;   // non-call dismiss delay
+
+  var wrap = document.createElement('div');
+  wrap.id = 'ancsWrap';
+  document.body.appendChild(wrap);
+
+  var seen = Object.create(null);   // uid -> {el, timer, call}
+  var primed = false;               // first poll only seeds; never toasts backlog
+
+  // category / app -> glyph. Kept as text so there are no image dependencies
+  // (the Car Thing has no internet - only the BT link to its Pi).
+  var GLYPH = {IncomingCall:'\u{1F4DE}', MissedCall:'\u{1F4F5}', Voicemail:'\u{1F4FC}',
+    Social:'\u{1F4AC}', Schedule:'\u{1F4C5}', Email:'\u2709\uFE0F', News:'\u{1F4F0}',
+    HealthAndFitness:'\u2764\uFE0F', BusinessAndFinance:'\u{1F4B3}',
+    Location:'\u{1F4CD}', Entertainment:'\u{1F3AC}', Other:'\u{1F514}'};
+  var APP_GLYPH = {Messages:'\u{1F4AC}', WhatsApp:'\u{1F4AC}', Phone:'\u{1F4DE}',
+    FaceTime:'\u{1F4F9}', Mail:'\u2709\uFE0F', Gmail:'\u2709\uFE0F',
+    Calendar:'\u{1F4C5}', Clock:'\u23F0'};
+
+  function glyph(n){
+    return APP_GLYPH[n.app] || GLYPH[n.cat] || GLYPH.Other;
+  }
+
+  function dismiss(uid){
+    var rec = seen[uid];
+    if(!rec || !rec.el) return;
+    if(rec.timer) clearTimeout(rec.timer);
+    rec.timer = null;
+    var el = rec.el;
+    rec.el = null;
+    el.classList.remove('in');
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 380);
+  }
+
+  function show(n){
+    var el = document.createElement('div');
+    var theme = window.ANCS_THEME === 'light' ? ' light' : '';
+    el.className = 'ancs' + (n.call ? ' call' : '') + theme;
+    var who = n.title || n.app || 'Notification';
+    var sub = n.subtitle && n.subtitle !== who ? n.subtitle : '';
+    var msg = n.call ? (n.message || sub || 'Incoming call')
+                     : (n.message || sub || '');
+    el.innerHTML =
+      '<div class="ancs-ico"></div>' +
+      '<div class="ancs-body">' +
+        '<div class="ancs-app"></div>' +
+        '<div class="ancs-title"></div>' +
+        (msg ? '<div class="ancs-msg"></div>' : '') +
+      '</div>';
+    // textContent everywhere - notification text is untrusted, never innerHTML it
+    el.querySelector('.ancs-ico').textContent = glyph(n);
+    el.querySelector('.ancs-app').textContent = n.call ? 'Incoming call' : (n.app || '');
+    el.querySelector('.ancs-title').textContent = who;
+    if(msg) el.querySelector('.ancs-msg').textContent = msg;
+    el.addEventListener('click', function(){ dismiss(n.uid); });
+
+    wrap.appendChild(el);
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ el.classList.add('in'); });
+    });
+
+    var rec = seen[n.uid] || (seen[n.uid] = {});
+    rec.el = el;
+    rec.call = !!n.call;
+    // calls hang around until the phone says the call is over
+    if(!n.call) rec.timer = setTimeout(function(){ dismiss(n.uid); }, HOLD);
+    return rec;
+  }
+
+  function update(n){
+    var rec = seen[n.uid];
+    if(!rec || !rec.el) return;
+    var t = rec.el.querySelector('.ancs-title');
+    if(t && n.title && t.textContent !== n.title) t.textContent = n.title;
+    var m = rec.el.querySelector('.ancs-msg');
+    if(m && n.message && m.textContent !== n.message) m.textContent = n.message;
+  }
+
+  function tick(){
+    fetch(URL_, {cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d || !d.items) return;
+        var live = Object.create(null);
+        d.items.forEach(function(n){ live[n.uid] = n; });
+
+        d.items.forEach(function(n){
+          // first poll after load only seeds: never replay the backlog
+          if(!primed){ seen[n.uid] = {seeded:true}; return; }
+          var rec = seen[n.uid];
+          if(!rec){
+            // only toast things that are actually recent, so a gateway
+            // restart or a slow poll can't dump a pile of stale banners
+            if(n.fresh && n.active !== false) show(n);
+            else seen[n.uid] = {seeded:true};
+          } else if(rec.el){
+            if(n.active === false) dismiss(n.uid);   // call ended / cleared on phone
+            else update(n);
+          }
+        });
+
+        // a call the phone dropped from the list entirely
+        Object.keys(seen).forEach(function(uid){
+          if(seen[uid].el && !live[uid]) dismiss(uid);
+        });
+
+        primed = true;
+      })
+      .catch(function(){ /* link down - the weather UI already flags that */ });
+  }
+
+  tick();
+  setInterval(tick, POLL);
+})();
+</script>
+<!-- ===== end iPhone notification toast ===================================== -->
+<!-- ANCS-NOTIFY-END -->
 </body>
 </html>

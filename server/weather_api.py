@@ -510,6 +510,28 @@ def bird_photo(name):
         return None
 
 
+# --- ANCS iPhone notifications ---
+# Same-origin proxy for the ANCS gateway (BirdThing Pi :8099) so the Car
+# Thing's browser can read iPhone notifications; it has no route to that host
+# or port itself. Short cache so a 2.5s UI poll can't stampede the gateway.
+_ancs_cache = {"t": 0.0, "d": {"ok": False, "linked": False, "items": []}}
+ANCS_URL = "http://192.168.1.250:8099/api/notifications"
+
+
+def notify():
+    now = time.time()
+    if now - _ancs_cache["t"] < 1.0:
+        return _ancs_cache["d"]
+    try:
+        with urllib.request.urlopen(ANCS_URL, timeout=3) as r:
+            _ancs_cache["d"] = json.loads(r.read().decode())
+    except Exception as e:
+        _ancs_cache["d"] = {"ok": False, "linked": False, "items": [],
+                            "error": str(e)[:120]}
+    _ancs_cache["t"] = now
+    return _ancs_cache["d"]
+
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def _send(self, code, ctype, body, cache=None):
@@ -543,6 +565,8 @@ class H(BaseHTTPRequestHandler):
             self._json(weather())
         elif p.startswith("/api/weather"):
             self._json(weather())
+        elif p.startswith("/api/notify"):
+            self._json(notify())
         elif p.startswith("/api/bird/photo"):
             nm = _qs(p).get("name", [""])[0] or (bird().get("name") or "")
             ph = bird_photo(nm)
