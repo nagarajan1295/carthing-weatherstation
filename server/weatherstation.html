@@ -502,11 +502,7 @@ function applyScale(){uiScale=Math.max(0.8,Math.min(1.4,Math.round(uiScale*10)/1
 function setScale(v){uiScale=v;applyScale();}
 function scaleStep(d){uiScale+=d*0.1;applyScale();}
 // ---- brightness (floor avoids the low-PWM flicker; debounced so the knob isn't laggy) ----
-// Auto brightness defaults ON: the flag only ever gets WRITTEN when you toggle Auto or drag the
-// slider, so anything that clears the Chromium profile (/var/lib/chrome_storage) leaves the key
-// absent — and with the old ==='1' test that silently meant "off", pinning the panel at 80% all
-// night. Absent now means ON; an explicit '0' (manualBright/setAuto(false)) still turns it off.
-let brightPct=parseInt(localStorage.getItem('brightPct')||'80')||80,brightAuto=localStorage.getItem('brightAuto')!=='0',_lastAuto=-1,_brT=null;
+let brightPct=parseInt(localStorage.getItem('brightPct')||'80')||80,brightAuto=localStorage.getItem('brightAuto')==='1',_lastAuto=-1,_brT=null;
 function applyBright(){brightPct=Math.max(BR_FLOOR,Math.min(100,brightPct));
   document.getElementById('bfill').style.width=brightPct+'%';
   const p=document.getElementById('bpct');if(p)p.textContent=brightPct+(brightAuto?'% · auto':'%');
