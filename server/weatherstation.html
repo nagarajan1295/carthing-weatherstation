@@ -522,178 +522,364 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
   setTimeout(()=>{markBrightAuto();if(brightAuto)autoApply(true);else applyBright();},1200);})();
 </script>
 <!-- ANCS-NOTIFY-BEGIN -->
-<script>window.ANCS_URL='/api/notify';</script>
-<!-- ===== iPhone notification toast (ANCS) =====================================
-     Self-contained. Set window.ANCS_URL before this block to point at the
-     notification endpoint (the ANCS gateway on the BirdThing Pi, or a local
-     proxy of it). Polls, then slides a banner in for anything new.
-     Incoming calls stay up until the call ends; everything else auto-dismisses.
+<script>window.ANCS_URL="/api/notify";window.ANCS_FS="calc(30px * var(--uiscale,1))";window.ANCS_STYLE="full";</script>
+<!-- ===== iPhone notification display (ANCS) ==================================
+     Self-contained. Patch-time globals set the DEFAULTS:
+
+       window.ANCS_URL    endpoint to poll (gateway, or a same-origin proxy)
+       window.ANCS_FS     CSS length for the base font size. Everything else is
+                          in em, so pass the host page's OWN scale here and the
+                          notification tracks that screen's typography:
+                            BirdThing     calc(21px * var(--ts,1))
+                            WeatherThing  calc(30px * var(--uiscale,1))
+                            kiosk         clamp(1.3rem, 2vw, 1.9rem)
+       window.ANCS_STYLE  'toast' | 'full'   default layout
+       window.ANCS_THEME  'light' for light pages with no body.light
+
+     The user then overrides size / fullscreen / duration / on-off from the
+     host page's own Settings screen - this script INJECTS those rows into
+     #settings .vbody at runtime rather than editing the dashboards, so both
+     Car Things get the identical panel and stay consistent. Choices live in
+     localStorage and apply immediately.
+
+     PERFORMANCE: no backdrop-filter, no infinite animations, opacity-only
+     transitions. The Car Things composite in software on an Amlogic GPU while
+     their own UI repaints constantly (the WeatherThing redraws an analog clock
+     every 200ms) - blur layers and looping transforms made this visibly glitch.
      Canonical source: E:\BirdThing\ancs\notify_widget.html
 ============================================================================ -->
 <style>
   #ancsWrap{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;
-    flex-direction:column;align-items:center;gap:8px;padding:10px;
+    flex-direction:column;align-items:center;gap:.5em;padding:.6em;
     pointer-events:none;}
-  .ancs{pointer-events:auto;width:100%;max-width:720px;display:flex;
-    align-items:center;gap:14px;padding:12px 16px;border-radius:16px;
-    background:rgba(28,28,30,.92);color:#f5f5f7;
-    border:1px solid rgba(255,255,255,.14);
-    box-shadow:0 10px 34px rgba(0,0,0,.55);
-    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  #ancsWrap.full{top:0;bottom:0;padding:0;gap:0;}
+
+  .ancs{pointer-events:auto;box-sizing:border-box;
     font-family:'Inter',-apple-system,system-ui,"Helvetica Neue",sans-serif;
-    transform:translateY(-140%);opacity:0;
-    transition:transform .34s cubic-bezier(.22,1,.36,1),opacity .34s;}
-  .ancs.in{transform:translateY(0);opacity:1;}
-  /* light styling: either the host page sets body.light (BirdThing /
-     WeatherThing convention) or the page is light-themed and sets
-     window.ANCS_THEME='light' (the bedroom kiosk, which has no body.light) */
-  body.light .ancs,.ancs.light{background:rgba(255,255,255,.94);color:#1c1c1e;
-    border-color:rgba(0,0,0,.10);box-shadow:0 10px 34px rgba(0,0,0,.22);}
-  .ancs-ico{flex:0 0 auto;width:40px;height:40px;border-radius:11px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:21px;background:rgba(255,255,255,.14);}
-  body.light .ancs-ico,.ancs.light .ancs-ico{background:rgba(0,0,0,.07);}
-  .ancs-body{flex:1 1 auto;min-width:0;}
-  .ancs-app{font-size:11px;font-weight:600;letter-spacing:.09em;
-    text-transform:uppercase;opacity:.62;margin-bottom:2px;}
-  .ancs-title{font-size:18px;font-weight:600;white-space:nowrap;
-    overflow:hidden;text-overflow:ellipsis;line-height:1.22;}
-  .ancs-msg{font-size:15px;opacity:.8;line-height:1.3;margin-top:2px;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
-    overflow:hidden;}
-  /* incoming call: green, pulsing, and it stays until the call is over */
-  .ancs.call{border-color:rgba(48,209,88,.55);
-    box-shadow:0 10px 34px rgba(0,0,0,.55),0 0 0 1px rgba(48,209,88,.28) inset;}
-  .ancs.call.light{box-shadow:0 10px 34px rgba(0,0,0,.22),
-    0 0 0 1px rgba(40,167,69,.30) inset;}
-  .ancs.call .ancs-ico{background:rgba(48,209,88,.22);color:#30d158;
-    animation:ancsPulse 1.5s ease-in-out infinite;}
-  @keyframes ancsPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.13);}}
-  @media (prefers-reduced-motion:reduce){
-    .ancs{transition:opacity .2s;transform:none;}
-    .ancs.call .ancs-ico{animation:none;}
-  }
+    font-size:var(--ancs-fs,21px);
+    background:#1c1c1e;color:#f5f5f7;
+    border:1px solid rgba(255,255,255,.16);
+    opacity:0;transition:opacity .32s ease;}
+  .ancs.in{opacity:1;}
+  body.light .ancs,.ancs.light{background:#fff;color:#1c1c1e;
+    border-color:rgba(0,0,0,.12);}
+
+  /* ---- toast layout ---- */
+  .ancs.toast{width:100%;max-width:44em;display:flex;align-items:center;
+    gap:.8em;padding:.7em .95em;border-radius:.95em;
+    box-shadow:0 .5em 1.6em rgba(0,0,0,.5);}
+  .ancs.toast .ancs-ico{flex:0 0 auto;width:2.3em;height:2.3em;
+    border-radius:.62em;display:flex;align-items:center;justify-content:center;
+    font-size:1.15em;background:rgba(255,255,255,.14);}
+  body.light .ancs.toast .ancs-ico,.ancs.toast.light .ancs-ico{
+    background:rgba(0,0,0,.07);}
+  .ancs.toast .ancs-body{flex:1 1 auto;min-width:0;}
+  .ancs.toast .ancs-app{font-size:.62em;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;opacity:.62;margin-bottom:.15em;}
+  .ancs.toast .ancs-title{font-size:1.12em;font-weight:600;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+  .ancs.toast .ancs-msg{font-size:.95em;opacity:.8;line-height:1.3;
+    margin-top:.12em;display:-webkit-box;-webkit-line-clamp:2;
+    -webkit-box-orient:vertical;overflow:hidden;}
+  .ancs.toast.call{border-color:rgba(48,209,88,.6);}
+  .ancs.toast.call .ancs-ico{background:rgba(48,209,88,.22);color:#30d158;}
+
+  /* ---- fullscreen layout ---- */
+  .ancs.full{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;
+    border:0;border-radius:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+    padding:1em 1.2em;gap:.35em;
+    transition:opacity .9s ease;}   /* fade-out slower than fade-in */
+  .ancs.full.in{transition:opacity .3s ease;}
+  .ancs.full .ancs-ico{font-size:2.3em;line-height:1;margin-bottom:.15em;}
+  .ancs.full .ancs-app{font-size:.62em;font-weight:600;letter-spacing:.16em;
+    text-transform:uppercase;opacity:.6;}
+  .ancs.full .ancs-title{font-size:1.55em;font-weight:700;line-height:1.12;
+    max-width:96%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ancs.full .ancs-msg{font-size:.98em;opacity:.85;line-height:1.28;
+    max-width:94%;display:-webkit-box;-webkit-line-clamp:3;
+    -webkit-box-orient:vertical;overflow:hidden;}
+  .ancs.full.call{background:#06240f;color:#eafff0;}
+  .ancs.full.call .ancs-app{color:#30d158;opacity:1;}
+  body.light .ancs.full.call,.ancs.full.call.light{background:#e8fbee;
+    color:#042c12;}
+
+  /* selected state for the injected settings buttons */
+  #settings .ancs-sel{background:var(--accent,#0a84ff)!important;
+    color:#fff!important;border-color:transparent!important;}
+
+  @media (prefers-reduced-motion:reduce){.ancs{transition:opacity .15s;}}
 </style>
 <script>
 (function(){
   var URL_ = window.ANCS_URL || '/api/notify';
   var POLL = window.ANCS_POLL_MS || 2500;
-  var HOLD = window.ANCS_HOLD_MS || 9000;   // non-call dismiss delay
+  var BASE_FS = window.ANCS_FS || '21px';
+  var DEF_FULL = window.ANCS_STYLE === 'full';
+
+  // ---- user settings (host page's Settings screen writes these) ----
+  function ls(k, d){ try { var v = localStorage.getItem(k);
+    return v === null ? d : v; } catch(e){ return d; } }
+  function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+
+  var S = {
+    on:    ls('ancsOn','1') === '1',
+    scale: parseFloat(ls('ancsScale','1')) || 1,
+    full:  ls('ancsFull', DEF_FULL ? '1' : '0') === '1',
+    hold:  parseInt(ls('ancsHold','6'), 10) || 6
+  };
 
   var wrap = document.createElement('div');
   wrap.id = 'ancsWrap';
   document.body.appendChild(wrap);
 
-  var seen = Object.create(null);   // uid -> {el, timer, call}
-  var primed = false;               // first poll only seeds; never toasts backlog
+  function applyStyle(){
+    wrap.className = S.full ? 'full' : '';
+    // the host's own scale variable is inside BASE_FS, so this multiplies the
+    // screen's real typography by the user's notification-size preference
+    wrap.style.setProperty('--ancs-fs',
+      'calc((' + BASE_FS + ') * ' + S.scale + ')');
+  }
+  applyStyle();
 
-  // category / app -> glyph. Kept as text so there are no image dependencies
-  // (the Car Thing has no internet - only the BT link to its Pi).
+  var seen = Object.create(null);
+  var primed = false;
+  var queue = [], current = null;
+
   var GLYPH = {IncomingCall:'\u{1F4DE}', MissedCall:'\u{1F4F5}', Voicemail:'\u{1F4FC}',
     Social:'\u{1F4AC}', Schedule:'\u{1F4C5}', Email:'\u2709\uFE0F', News:'\u{1F4F0}',
     HealthAndFitness:'\u2764\uFE0F', BusinessAndFinance:'\u{1F4B3}',
     Location:'\u{1F4CD}', Entertainment:'\u{1F3AC}', Other:'\u{1F514}'};
   var APP_GLYPH = {Messages:'\u{1F4AC}', WhatsApp:'\u{1F4AC}', Phone:'\u{1F4DE}',
     FaceTime:'\u{1F4F9}', Mail:'\u2709\uFE0F', Gmail:'\u2709\uFE0F',
-    Calendar:'\u{1F4C5}', Clock:'\u23F0'};
+    Calendar:'\u{1F4C5}', Clock:'\u23F0', Findmy:'\u{1F4CD}', Myq:'\u{1F6AA}'};
+  function glyph(n){ return APP_GLYPH[n.app] || GLYPH[n.cat] || GLYPH.Other; }
 
-  function glyph(n){
-    return APP_GLYPH[n.app] || GLYPH[n.cat] || GLYPH.Other;
+  function build(n, full){
+    var el = document.createElement('div');
+    el.className = 'ancs ' + (full ? 'full' : 'toast')
+      + (n.call ? ' call' : '')
+      + (window.ANCS_THEME === 'light' ? ' light' : '');
+    var who = n.title || n.app || 'Notification';
+    var sub = (n.subtitle && n.subtitle !== who) ? n.subtitle : '';
+    var msg = n.call ? (n.message || sub || 'Incoming call')
+                     : (n.message || sub || '');
+    el.innerHTML = '<div class="ancs-ico"></div><div class="ancs-body">'
+      + '<div class="ancs-app"></div><div class="ancs-title"></div>'
+      + (msg ? '<div class="ancs-msg"></div>' : '') + '</div>';
+    if (full) {   // fullscreen centres the parts directly, no inner column
+      var b = el.querySelector('.ancs-body');
+      while (b.firstChild) el.insertBefore(b.firstChild, b);
+      el.removeChild(b);
+    }
+    // textContent everywhere - notification text is untrusted, never innerHTML
+    el.querySelector('.ancs-ico').textContent = glyph(n);
+    el.querySelector('.ancs-app').textContent =
+      n.call ? 'Incoming call' : (n.app || '');
+    el.querySelector('.ancs-title').textContent = who;
+    if (msg) el.querySelector('.ancs-msg').textContent = msg;
+    el.addEventListener('click', function(){ dismiss(n.uid); });
+    return el;
   }
 
   function dismiss(uid){
     var rec = seen[uid];
-    if(!rec || !rec.el) return;
-    if(rec.timer) clearTimeout(rec.timer);
-    rec.timer = null;
-    var el = rec.el;
+    if (!rec || !rec.el) return;
+    if (rec.timer) { clearTimeout(rec.timer); rec.timer = null; }
+    var el = rec.el, wasFull = rec.full;
     rec.el = null;
+    if (current === uid) current = null;
     el.classList.remove('in');
-    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 380);
+    setTimeout(function(){
+      if (el.parentNode) el.parentNode.removeChild(el);
+      if (wasFull) next();
+    }, 950);
   }
 
-  function show(n){
-    var el = document.createElement('div');
-    var theme = window.ANCS_THEME === 'light' ? ' light' : '';
-    el.className = 'ancs' + (n.call ? ' call' : '') + theme;
-    var who = n.title || n.app || 'Notification';
-    var sub = n.subtitle && n.subtitle !== who ? n.subtitle : '';
-    var msg = n.call ? (n.message || sub || 'Incoming call')
-                     : (n.message || sub || '');
-    el.innerHTML =
-      '<div class="ancs-ico"></div>' +
-      '<div class="ancs-body">' +
-        '<div class="ancs-app"></div>' +
-        '<div class="ancs-title"></div>' +
-        (msg ? '<div class="ancs-msg"></div>' : '') +
-      '</div>';
-    // textContent everywhere - notification text is untrusted, never innerHTML it
-    el.querySelector('.ancs-ico').textContent = glyph(n);
-    el.querySelector('.ancs-app').textContent = n.call ? 'Incoming call' : (n.app || '');
-    el.querySelector('.ancs-title').textContent = who;
-    if(msg) el.querySelector('.ancs-msg').textContent = msg;
-    el.addEventListener('click', function(){ dismiss(n.uid); });
-
+  function present(n){
+    var full = S.full;
+    var el = build(n, full);
     wrap.appendChild(el);
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){ el.classList.add('in'); });
     });
-
     var rec = seen[n.uid] || (seen[n.uid] = {});
-    rec.el = el;
-    rec.call = !!n.call;
-    // calls hang around until the phone says the call is over
-    if(!n.call) rec.timer = setTimeout(function(){ dismiss(n.uid); }, HOLD);
-    return rec;
+    rec.el = el; rec.full = full;
+    if (full) current = n.uid;
+    var ms = (n.call ? Math.max(S.hold, 20) : S.hold) * 1000;
+    rec.timer = setTimeout(function(){ dismiss(n.uid); }, ms);
+  }
+
+  function next(){
+    if (current !== null || !queue.length) return;
+    present(queue.shift());
+  }
+  function show(n){
+    if (!S.on) { seen[n.uid] = {seeded:true}; return; }
+    if (S.full) { queue.push(n); next(); } else present(n);
   }
 
   function update(n){
     var rec = seen[n.uid];
-    if(!rec || !rec.el) return;
+    if (!rec || !rec.el) return;
     var t = rec.el.querySelector('.ancs-title');
-    if(t && n.title && t.textContent !== n.title) t.textContent = n.title;
+    if (t && n.title && t.textContent !== n.title) t.textContent = n.title;
     var m = rec.el.querySelector('.ancs-msg');
-    if(m && n.message && m.textContent !== n.message) m.textContent = n.message;
+    if (m && n.message && m.textContent !== n.message) m.textContent = n.message;
   }
 
   function tick(){
     fetch(URL_, {cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(d){
-        if(!d || !d.items) return;
+        if (!d || !d.items) return;
         var live = Object.create(null);
         d.items.forEach(function(n){ live[n.uid] = n; });
-
         d.items.forEach(function(n){
-          // first poll after load only seeds: never replay the backlog
-          if(!primed){ seen[n.uid] = {seeded:true}; return; }
+          if (!primed) { seen[n.uid] = {seeded:true}; return; }
           var rec = seen[n.uid];
-          if(!rec){
-            // only toast things that are actually recent, so a gateway
-            // restart or a slow poll can't dump a pile of stale banners
-            if(n.fresh && n.active !== false) show(n);
+          if (!rec) {
+            if (n.fresh && n.active !== false) { seen[n.uid] = {}; show(n); }
             else seen[n.uid] = {seeded:true};
-          } else if(rec.el){
-            if(n.active === false) dismiss(n.uid);   // call ended / cleared on phone
-            else update(n);
+          } else if (rec.el) {
+            if (n.active === false) dismiss(n.uid); else update(n);
           }
         });
-
-        // a call the phone dropped from the list entirely
         Object.keys(seen).forEach(function(uid){
-          if(seen[uid].el && !live[uid]) dismiss(uid);
+          if (seen[uid].el && !live[uid]) dismiss(uid);
         });
-
         primed = true;
       })
-      .catch(function(){ /* link down - the weather UI already flags that */ });
+      .catch(function(){});
   }
+
+  // ---------------- settings rows, injected into the host's panel ----------
+  function injectSettings(){
+    var body = document.querySelector('#settings .vbody');
+    if (!body || document.getElementById('ancsSet')) return;
+
+    // the two dashboards use different class names for the same thing
+    var labelCls = body.querySelector('.sk') ? 'sk' : 'lbl';
+    var segCls   = body.querySelector('.seg2') ? 'seg2' : 'seg';
+
+    function row(label, extraId){
+      var d = document.createElement('div');
+      d.className = 'srow';
+      d.innerHTML = '<span class="' + labelCls + '"></span>';
+      d.firstChild.textContent = label;
+      if (extraId) {
+        var s = document.createElement('span');
+        s.id = extraId;
+        s.style.cssText = 'color:var(--sec,#888);font-weight:600;'
+          + 'letter-spacing:0;margin-left:6px';
+        d.firstChild.appendChild(s);
+      }
+      return d;
+    }
+    function seg(buttons){
+      var g = document.createElement('div');
+      g.className = segCls;
+      buttons.forEach(function(b){
+        var el = document.createElement('button');
+        el.textContent = b[0];
+        el.onclick = b[1];
+        if (b[2]) el.dataset.ancs = b[2];
+        g.appendChild(el);
+      });
+      return g;
+    }
+
+    var wrapEl = document.createElement('div');
+    wrapEl.id = 'ancsSet';
+
+    var head = row('Phone notifications');
+    head.appendChild(seg([
+      ['On',  function(){ S.on = true;  lsSet('ancsOn','1'); mark(); }, 'on1'],
+      ['Off', function(){ S.on = false; lsSet('ancsOn','0'); mark(); }, 'on0']
+    ]));
+    wrapEl.appendChild(head);
+
+    var sz = row('Notification size', 'ancsPct');
+    var bw = document.createElement('div');
+    bw.className = 'bwrap';
+    [['\u2212', function(){ setScale(S.scale - 0.1); }],
+     ['+',      function(){ setScale(S.scale + 0.1); }],
+     ['Reset',  function(){ setScale(1); }]].forEach(function(b, i){
+      var el = document.createElement('button');
+      el.className = 'bbtn';
+      el.textContent = b[0];
+      el.onclick = b[1];
+      if (i === 2) el.style.cssText = 'width:auto;padding:13px 20px';
+      bw.appendChild(el);
+    });
+    sz.appendChild(bw);
+    wrapEl.appendChild(sz);
+
+    var fs = row('Full screen');
+    fs.appendChild(seg([
+      ['On',  function(){ S.full = true;  lsSet('ancsFull','1'); applyStyle(); mark(); }, 'f1'],
+      ['Off', function(){ S.full = false; lsSet('ancsFull','0'); applyStyle(); mark(); }, 'f0']
+    ]));
+    var hint = document.createElement('span');
+    hint.className = 'about';
+    hint.style.cssText = 'padding:4px 4px 0';
+    hint.textContent = 'On: the alert takes over the whole screen, then fades '
+      + 'away. Off: a banner across the top.';
+    fs.appendChild(hint);
+    wrapEl.appendChild(fs);
+
+    var hd = row('Show for', 'ancsSec');
+    var hb = document.createElement('div');
+    hb.className = 'bwrap';
+    [['\u2212', function(){ setHold(S.hold - 2); }],
+     ['+',      function(){ setHold(S.hold + 2); }]].forEach(function(b){
+      var el = document.createElement('button');
+      el.className = 'bbtn';
+      el.textContent = b[0];
+      el.onclick = b[1];
+      hb.appendChild(el);
+    });
+    hd.appendChild(hb);
+    wrapEl.appendChild(hd);
+
+    body.appendChild(wrapEl);
+    mark();
+  }
+
+  function setScale(v){
+    S.scale = Math.max(0.6, Math.min(3, Math.round(v * 10) / 10));
+    lsSet('ancsScale', S.scale); applyStyle(); mark();
+  }
+  function setHold(v){
+    S.hold = Math.max(2, Math.min(30, v));
+    lsSet('ancsHold', S.hold); mark();
+  }
+  function mark(){
+    var p = document.getElementById('ancsPct');
+    if (p) p.textContent = Math.round(S.scale * 100) + '%';
+    var s = document.getElementById('ancsSec');
+    if (s) s.textContent = S.hold + 's';
+    var q = document.querySelectorAll('#ancsSet button[data-ancs]');
+    Array.prototype.forEach.call(q, function(b){
+      var k = b.dataset.ancs;
+      var on = (k === 'on1' && S.on) || (k === 'on0' && !S.on)
+            || (k === 'f1' && S.full) || (k === 'f0' && !S.full);
+      b.classList.toggle('ancs-sel', on);
+    });
+  }
+
+  // the settings view may not exist yet at load; retry briefly, then watch
+  var tries = 0;
+  var iv = setInterval(function(){
+    injectSettings();
+    if (document.getElementById('ancsSet') || ++tries > 40) clearInterval(iv);
+  }, 250);
 
   tick();
   setInterval(tick, POLL);
 })();
 </script>
-<!-- ===== end iPhone notification toast ===================================== -->
+<!-- ===== end iPhone notification display ==================================== -->
 <!-- ANCS-NOTIFY-END -->
 </body>
 </html>
