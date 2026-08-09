@@ -362,6 +362,7 @@ loadBird();setInterval(loadBird,30000);
   var ptr=document.createElement('div');ptr.id='ptr';ptr.textContent='↻ Release to refresh';
   document.body.appendChild(ptr);
   var down=false,sy=0,el=null,pull=0,moved=0,st=0;
+  var PTR_T=70;   // drag px needed to refresh (was 130 = 27% of a 480px screen)
   function scrollableFrom(t){for(;t&&t!==document.body;t=t.parentElement){var s=getComputedStyle(t);
     if((s.overflowY==='auto'||s.overflowY==='scroll')&&t.scrollHeight>t.clientHeight+4)return t;}return null;}
   document.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse')return;
@@ -370,11 +371,13 @@ loadBird();setInterval(loadBird,30000);
     if(el)el.style.scrollBehavior='auto';},true);
   document.addEventListener('pointermove',function(e){if(!down)return;
     var dy=e.clientY-sy;moved=Math.max(moved,Math.abs(dy));
-    if(el){el.scrollTop=st-dy;}
+    // pull wins over scrolling when the scroller is already at its top,
+    // which is what makes the gesture reachable anywhere on the screen
+    if(el&&!(dy>0&&st<=0&&el.scrollTop<=0)){el.scrollTop=st-dy;}
     else if(dy>0&&!curOverlay()){pull=dy;
-      ptr.style.opacity=Math.min(1,dy/130);ptr.style.transform='translate(-50%,'+Math.min(56,dy/2.4)+'px)';}
+      ptr.style.opacity=Math.min(1,dy/PTR_T);ptr.style.transform='translate(-50%,'+Math.min(56,dy/2.4)+'px)';}
   },true);
-  function end(){if(pull>130)location.reload();
+  function end(){if(pull>PTR_T)location.reload();
     if(el)el.style.scrollBehavior='';
     down=false;el=null;pull=0;ptr.style.opacity=0;ptr.style.transform='translate(-50%,0)';}
   document.addEventListener('pointerup',end,true);
