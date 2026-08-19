@@ -365,7 +365,7 @@ loadBird();setInterval(loadBird,30000);
   var PTR_T=70;   // drag px needed to refresh (was 130 = 27% of a 480px screen)
   function scrollableFrom(t){for(;t&&t!==document.body;t=t.parentElement){var s=getComputedStyle(t);
     if((s.overflowY==='auto'||s.overflowY==='scroll')&&t.scrollHeight>t.clientHeight+4)return t;}return null;}
-  document.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse')return;
+  document.addEventListener('pointerdown',function(e){/* any pointerType: this panel has reported touch as well as mouse */
     if(e.target.closest('.slider,#lBar,#bbar,#qbox'))return;
     down=true;sy=e.clientY;moved=0;pull=0;el=scrollableFrom(e.target);st=el?el.scrollTop:0;
     if(el)el.style.scrollBehavior='auto';},true);
@@ -525,7 +525,7 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
   setTimeout(()=>{markBrightAuto();if(brightAuto)autoApply(true);else applyBright();},1200);})();
 </script>
 <!-- ANCS-NOTIFY-BEGIN -->
-<script>window.ANCS_URL="/api/notify";window.ANCS_FS="calc(30px * var(--uiscale,1))";window.ANCS_STYLE="full";</script>
+<script>window.ANCS_URL="/api/notify";window.ANCS_DEVICE="weatherthing";window.ANCS_FS="calc(30px * var(--uiscale,1))";window.ANCS_STYLE="full";</script>
 <!-- ===== iPhone notification display (ANCS) ==================================
      Self-contained. Patch-time globals set the DEFAULTS:
 
@@ -616,6 +616,13 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
 <script>
 (function(){
   var URL_ = window.ANCS_URL || '/api/notify';
+  // Which screen this is, so the central per-device on/off can address it.
+  // Set at patch time: birdthing | weatherthing | kiosk.
+  var DEVICE = window.ANCS_DEVICE || 'birdthing';
+  // Central settings, delivered inside the notification feed itself so there
+  // is no second request. Local prefs stay for per-screen cosmetics (size,
+  // full-screen); anything that must be the SAME everywhere lives here.
+  var CENTRAL = null;
   var POLL = window.ANCS_POLL_MS || 2500;
   var BASE_FS = window.ANCS_FS || '21px';
   var DEF_FULL = window.ANCS_STYLE === 'full';
@@ -709,7 +716,8 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
     var rec = seen[n.uid] || (seen[n.uid] = {});
     rec.el = el; rec.full = full;
     if (full) current = n.uid;
-    var ms = (n.call ? Math.max(S.hold, 20) : S.hold) * 1000;
+    var hold = (CENTRAL && CENTRAL.hold_seconds) ? CENTRAL.hold_seconds : S.hold;
+    var ms = (n.call ? Math.max(hold, 20) : hold) * 1000;
     rec.timer = setTimeout(function(){ dismiss(n.uid); }, ms);
   }
 
@@ -737,6 +745,15 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
       .then(function(d){
         if (!d || !d.items) return;
         var live = Object.create(null);
+        if (d.settings) { CENTRAL = d.settings; markCentral(); }
+        // Central per-device switch: this screen is turned off from the
+        // BirdThing settings screen. Seed everything so nothing replays in a
+        // burst when it is switched back on.
+        if (CENTRAL && CENTRAL.devices && CENTRAL.devices[DEVICE] === false) {
+          d.items.forEach(function(n){ seen[n.uid] = {seeded:true}; });
+          primed = true;
+          return;
+        }
         d.items.forEach(function(n){ live[n.uid] = n; });
         d.items.forEach(function(n){
           if (!primed) { seen[n.uid] = {seeded:true}; return; }
@@ -831,28 +848,113 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
     fs.appendChild(hint);
     wrapEl.appendChild(fs);
 
-    var hd = row('Show for', 'ancsSec');
-    var hb = document.createElement('div');
-    hb.className = 'bwrap';
-    [['\u2212', function(){ setHold(S.hold - 2); }],
-     ['+',      function(){ setHold(S.hold + 2); }]].forEach(function(b){
-      var el = document.createElement('button');
-      el.className = 'bbtn';
-      el.textContent = b[0];
-      el.onclick = b[1];
-      hb.appendChild(el);
-    });
-    hd.appendChild(hb);
-    wrapEl.appendChild(hd);
+    // ---- CENTRAL settings ------------------------------------------------
+    // These live on the gateway and apply to EVERY screen, so they are only
+    // offered here on the BirdThing dashboard - it is the one screen whose
+    // origin can write them (the others proxy the feed read-only). Setting
+    // "how long" and "which screens" in one place is the entire point.
+    if (DEVICE === 'birdthing') {
+      var hd = row('Show for', 'ancsSec');
+      var hb = document.createElement('div');
+      hb.className = 'bwrap';
+      [['-', function(){ bumpHold(-1); }],
+       ['+', function(){ bumpHold(1); }]].forEach(function(b){
+        var el = document.createElement('button');
+        el.className = 'bbtn';
+        el.textContent = b[0];
+        el.onclick = b[1];
+        hb.appendChild(el);
+      });
+      hd.appendChild(hb);
+      var hh = document.createElement('span');
+      hh.className = 'about';
+      hh.style.cssText = 'padding:4px 4px 0';
+      hh.textContent = 'How long each alert stays on screen, on every display. '
+        + 'Incoming calls always stay at least 20s.';
+      hd.appendChild(hh);
+      wrapEl.appendChild(hd);
+
+      var mb = row('Message text');
+      mb.appendChild(seg([
+        ['Show', function(){ centralSet('show_body=1'); }, 'mb1'],
+        ['Hide', function(){ centralSet('show_body=0'); }, 'mb0']
+      ]));
+      var mh = document.createElement('span');
+      mh.className = 'about';
+      mh.style.cssText = 'padding:4px 4px 0';
+      mh.textContent = 'Hide shows only who it is from. The text is dropped at '
+        + 'the gateway, so it never reaches any screen.';
+      mb.appendChild(mh);
+      wrapEl.appendChild(mb);
+
+      var dl = document.createElement('div');
+      dl.className = 'srow';
+      var dlk = document.createElement('span');
+      dlk.className = 'sk';
+      dlk.textContent = 'Show notifications on';
+      dl.appendChild(dlk);
+      [['birdthing', 'This screen (BirdThing)'],
+       ['weatherthing', 'Bedroom WeatherThing'],
+       ['kiosk', 'Bedroom weather station']].forEach(function(d){
+        var r2 = document.createElement('div');
+        r2.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 4px';
+        var lab = document.createElement('span');
+        lab.textContent = d[1];
+        lab.style.cssText = 'font-size:.92em;opacity:.85';
+        r2.appendChild(lab);
+        r2.appendChild(seg([
+          ['On',  function(){ centralSet('dev_' + d[0] + '=1'); }, 'd1_' + d[0]],
+          ['Off', function(){ centralSet('dev_' + d[0] + '=0'); }, 'd0_' + d[0]]
+        ]));
+        dl.appendChild(r2);
+      });
+      wrapEl.appendChild(dl);
+    }
 
     body.appendChild(wrapEl);
     mark();
+    markCentral();
+    if (DEVICE === 'birdthing') {
+      // pull current values so the panel is never blank when first opened
+      fetch('/api/notifyset', {cache:'no-store'})
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if (d && d.settings) { CENTRAL = d.settings; markCentral(); } })
+        .catch(function(){});
+    }
   }
 
   function setScale(v){
     S.scale = Math.max(0.6, Math.min(3, Math.round(v * 10) / 10));
     lsSet('ancsScale', S.scale); applyStyle(); mark();
   }
+  // Writes go through the BirdThing API, which proxies to the gateway; the
+  // other screens have no route to :8099 at all.
+  function centralSet(qs){
+    fetch('/api/notifyset?' + qs, {cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if (d && d.settings) { CENTRAL = d.settings; markCentral(); } })
+      .catch(function(){});
+  }
+  function bumpHold(dir){
+    var cur = (CENTRAL && CENTRAL.hold_seconds) ? CENTRAL.hold_seconds : S.hold;
+    var next = Math.max(2, Math.min(60, cur + dir * (cur >= 20 ? 5 : 2)));
+    centralSet('hold=' + next);
+  }
+  function markCentral(){
+    if (!CENTRAL) return;
+    var s2 = document.getElementById('ancsSec');
+    if (s2) s2.textContent = CENTRAL.hold_seconds + 's';
+    var q = document.querySelectorAll('#ancsSet button[data-ancs]');
+    Array.prototype.forEach.call(q, function(b){
+      var k = b.dataset.ancs, on = null;
+      if (k === 'mb1') on = CENTRAL.show_body !== false;
+      else if (k === 'mb0') on = CENTRAL.show_body === false;
+      else if (k.indexOf('d1_') === 0) on = (CENTRAL.devices || {})[k.slice(3)] !== false;
+      else if (k.indexOf('d0_') === 0) on = (CENTRAL.devices || {})[k.slice(3)] === false;
+      if (on !== null) b.classList.toggle('ancs-sel', on);
+    });
+  }
+
   function setHold(v){
     S.hold = Math.max(2, Math.min(30, v));
     lsSet('ancsHold', S.hold); mark();
