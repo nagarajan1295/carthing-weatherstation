@@ -516,6 +516,21 @@ def bird_photo(name):
 # or port itself. Short cache so a 2.5s UI poll can't stampede the gateway.
 _ancs_cache = {"t": 0.0, "d": {"ok": False, "linked": False, "items": []}}
 ANCS_URL = "http://192.168.1.250:8099/api/notifications"
+ANCS_DISMISS_URL = "http://192.168.1.250:8099/api/dismiss"
+
+
+def notify_clear(qs=""):
+    """Write-through 'Clear' from this screen's notification centre - see
+    Store.dismiss_from_display() on the gateway. qs empty = clear everything
+    currently shown; qs='uid=<n>' clears just that one row."""
+    url = ANCS_DISMISS_URL + ("?" + qs if qs else "")
+    try:
+        with urllib.request.urlopen(url, timeout=5) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        _ancs_cache["t"] = 0.0      # force the next poll to see the clear
+        return data
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
 
 
 def notify():
@@ -565,6 +580,9 @@ class H(BaseHTTPRequestHandler):
             self._json(weather())
         elif p.startswith("/api/weather"):
             self._json(weather())
+        elif p.startswith("/api/notifyclear"):
+            q = p.split("?", 1)
+            self._json(notify_clear(q[1] if len(q) > 1 else ""))
         elif p.startswith("/api/notify"):
             self._json(notify())
         elif p.startswith("/api/bird/photo"):
