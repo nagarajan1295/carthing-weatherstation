@@ -701,10 +701,36 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
   #ancsCtr .ctr-list{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;
     padding:0 calc(12px*var(--s,1)) calc(14px*var(--s,1));display:flex;
     flex-direction:column;gap:calc(8px*var(--s,1));}
+  #ancsCtr .ctr-swipe{position:relative;overflow:hidden;border-radius:calc(14px*var(--s,1));
+    /* flex-shrink:0 is required, not cosmetic: .ctr-list is a column flex
+       container, and an overflow:hidden flex item's automatic minimum size
+       is 0 (spec quirk - overflow:visible items instead default to their
+       content size as the minimum) - without this every row got squashed
+       down to a fraction of its content height, clipping the message text. */
+    flex:0 0 auto;}
+  #ancsCtr .ctr-swipe-bg{position:absolute;inset:0;display:flex;align-items:center;
+    justify-content:flex-end;padding-right:calc(18px*var(--s,1));background:#ff3b30;
+    color:#fff;font-size:calc(13px*var(--s,1));font-weight:600;}
   #ancsCtr .ctr-row{display:flex;gap:calc(11px*var(--s,1));align-items:flex-start;
-    background:rgba(255,255,255,.07);border-radius:calc(14px*var(--s,1));
-    padding:calc(11px*var(--s,1)) calc(13px*var(--s,1));}
-  body.light #ancsCtr .ctr-row,#ancsCtr.light .ctr-row{background:rgba(0,0,0,.05);}
+    /* OPAQUE, not translucent - this sits directly above .ctr-swipe-bg's red
+       "Clear" reveal, which a translucent row would let bleed through before
+       any swipe happened. Solid colour = rgba(255,255,255,.07) pre-blended
+       onto the panel's own #111113 background. */
+    background:#242426;border-radius:calc(14px*var(--s,1));
+    padding:calc(11px*var(--s,1)) calc(13px*var(--s,1));position:relative;
+    transition:transform .2s ease;touch-action:pan-y;}
+  body.light #ancsCtr .ctr-row,#ancsCtr.light .ctr-row{background:#e8e8ea;}
+  #ancsCtr .ctr-row.dragging{transition:none;}
+  /* knob-scroll focus ring - only visible while the knob is being used to
+     move through the list, matches the accent used elsewhere for selection */
+  #ancsCtr .ctr-row.focused{box-shadow:0 0 0 calc(2px*var(--s,1)) #0a84ff inset;}
+  body.light #ancsCtr .ctr-row.focused,#ancsCtr.light .ctr-row.focused{box-shadow:0 0 0 calc(2px*var(--s,1)) #007aff inset;}
+  #ancsCtr .ctr-msg.expanded{-webkit-line-clamp:unset;}
+  #ancsCtr .ctr-clearall{flex:0 0 auto;align-self:center;margin:calc(4px*var(--s,1)) 0 0;
+    padding:calc(9px*var(--s,1)) calc(18px*var(--s,1));border-radius:999px;border:0;
+    background:rgba(255,59,48,.16);color:#ff453a;font:600 calc(13px*var(--s,1))/1 'Inter',system-ui,sans-serif;
+    letter-spacing:.02em;}
+  body.light #ancsCtr .ctr-clearall,#ancsCtr.light .ctr-clearall{background:rgba(255,59,48,.12);color:#d70015;}
   #ancsCtr .ctr-ico{flex:0 0 auto;width:calc(30px*var(--s,1));height:calc(30px*var(--s,1));
     border-radius:calc(8px*var(--s,1));display:flex;align-items:center;
     justify-content:center;font-size:calc(16px*var(--s,1));background:rgba(255,255,255,.12);}
@@ -930,12 +956,17 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
     ctr.innerHTML =
       '<div class="ctr-head"><span class="ctr-title">Phone</span>'
       + '<span class="ctr-hint">swipe up to close</span></div>'
-      + '<div class="ctr-list"></div><div class="ctr-grip"></div>';
+      + '<div class="ctr-list"></div>'
+      + '<button type="button" class="ctr-clearall">Clear All</button>'
+      + '<div class="ctr-grip"></div>';
     ctrList = ctr.querySelector('.ctr-list');
+    ctr.querySelector('.ctr-clearall').addEventListener('click', function(e){
+      e.stopPropagation(); clearNotif(null);
+    });
     document.body.appendChild(ctrBack);
     document.body.appendChild(ctr);
 
-    ctrBack.addEventListener('click', closeCenter);
+    ctrBack.addEventListener('click', function(){ closeCenter(false); });
     ctr.addEventListener('click', function(e){ e.stopPropagation(); });
 
     // Swipe DOWN starting in the top-right corner -> open. Listeners are on
@@ -947,7 +978,7 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
       var t = e.touches[0]; sy = t.clientY; sx = t.clientX; arm = 0;
       if (ctrOpen) { arm = 2; return; }
       if (t.clientY < Math.max(46, innerHeight * 0.09) &&
-          t.clientX > innerWidth * 0.55) arm = 1;
+          t.clientX > innerWidth * 0.6) arm = 1;
     }, {passive:true});
     document.addEventListener('touchmove', function(e){
       if (!arm) return;
@@ -960,27 +991,84 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
   function openCenter(){
     if (!ctr) return;
     ctrOpen = true;
+    ctrFocusIdx = 0;
     renderCenter(ctrItems);
     ctr.classList.add('open'); ctrBack.classList.add('open');
   }
-  function closeCenter(){
+  function closeCenter(goHome){
     ctrOpen = false;
     if (ctr) { ctr.classList.remove('open'); ctrBack.classList.remove('open'); }
+    // The physical "back" button (Escape, distinct from the knob's own
+    // press/Enter) both closes this overlay AND drops whatever the host page
+    // was showing underneath back to its home/live view - not just whatever
+    // view happened to be open behind the notification centre.
+    if (goHome) {
+      try {
+        if (typeof closeAllOverlays === 'function') closeAllOverlays();
+        if (typeof goLive === 'function') goLive();
+      } catch (e) {}
+    }
   }
-  function toggleCenter(){ ctrOpen ? closeCenter() : openCenter(); }
+  function toggleCenter(){ ctrOpen ? closeCenter(false) : openCenter(); }
+
+  // ---- knob navigation while the centre is open ----------------------------
+  // Rotation is bridged in as ArrowUp/ArrowDown key events (same mechanism the
+  // host page's own knob-scroll uses); the knob's own press arrives as Enter;
+  // the separate physical button below the knob arrives as Escape. Captured
+  // (not bubble phase) and stopped here so none of it also reaches the host
+  // page's keydown handler while the centre is on screen.
+  var ctrFocusIdx = 0, ctrRows = [];
+  function ctrApplyFocus(){
+    ctrRows.forEach(function(r, i){ r.classList.toggle('focused', i === ctrFocusIdx); });
+    if (ctrRows[ctrFocusIdx]) ctrRows[ctrFocusIdx].scrollIntoView({block: 'nearest', behavior: 'smooth'});
+  }
+  function ctrMoveFocus(delta){
+    if (!ctrRows.length) return;
+    ctrFocusIdx = Math.max(0, Math.min(ctrRows.length - 1, ctrFocusIdx + delta));
+    ctrApplyFocus();
+  }
+  document.addEventListener('keydown', function(e){
+    if (!ctrOpen) return;
+    var k = e.key;
+    if (k !== 'ArrowDown' && k !== 'ArrowUp' && k !== 'Escape' && k !== 'Backspace' && k !== 'Enter') return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    if (k === 'Escape' || k === 'Backspace') { closeCenter(true); return; }
+    if (k === 'ArrowDown') { ctrMoveFocus(1); return; }
+    if (k === 'ArrowUp') { ctrMoveFocus(-1); return; }
+    if (k === 'Enter' && ctrRows[ctrFocusIdx]) { ctrRows[ctrFocusIdx].click(); return; }
+  }, true);
+
+  // "Clear" a display-side dismiss - hides it here (and, once the next poll
+  // lands on every screen, everywhere) but CANNOT reach the phone's own
+  // Notification Centre: ANCS has no accessory-initiated remove, only the
+  // phone-to-accessory EVT_REMOVED this widget already listens for. uid=null
+  // clears everything currently listed; a real uid clears just that row.
+  var CLEAR_URL = window.ANCS_CLEAR_URL || '/api/notifyclear';
+  function clearNotif(uid){
+    // optimistic local hide so it feels instant on the screen you tapped
+    ctrItems.forEach(function(n){ if (uid === null || n.uid === uid) n._dismissedLocal = true; });
+    renderCenter(ctrItems);
+    fetch(CLEAR_URL + (uid !== null ? ('?uid=' + uid) : ''), {cache:'no-store'}).catch(function(){});
+  }
 
   function renderCenter(items){
-    ctrItems = items || [];
+    ctrItems = items || ctrItems;
     if (!ctrOpen || !ctrList) return;
     var live = ctrItems.filter(function(n){
-      return !n.removed_ts && n.active !== false;
+      return !n.removed_ts && n.active !== false && !n.dismissed_ts && !n._dismissedLocal;
     });
+    ctrRows = [];
     if (!live.length) {
       ctrList.innerHTML = '<div class="ctr-empty">No notifications</div>';
       return;
     }
     ctrList.textContent = '';
     live.forEach(function(n){
+      var wrap2 = document.createElement('div'); wrap2.className = 'ctr-swipe';
+      var bg = document.createElement('div'); bg.className = 'ctr-swipe-bg';
+      bg.textContent = 'Clear';
       var row = document.createElement('div'); row.className = 'ctr-row';
       row.innerHTML = '<div class="ctr-ico"></div><div class="ctr-body">'
         + '<div class="ctr-top"><span class="ctr-app"></span><span class="ctr-age"></span></div>'
@@ -990,9 +1078,49 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
       row.querySelector('.ctr-app').textContent = n.call ? 'Call' : (n.app || '');
       row.querySelector('.ctr-age').textContent = fmtAge(n.age);
       row.querySelector('.ctr-name').textContent = n.title || n.app || 'Notification';
-      if (n.message) row.querySelector('.ctr-msg').textContent = n.message;
-      ctrList.appendChild(row);
+      var msgEl = n.message ? row.querySelector('.ctr-msg') : null;
+      if (msgEl) msgEl.textContent = n.message;
+      // tap a row to expand its message (line-clamp lifted) and show the
+      // exact time; tapping again collapses. A drag (see below) is not a tap.
+      var rowMoved = false;
+      row.addEventListener('click', function(){
+        if (rowMoved) { rowMoved = false; return; }
+        var wasExpanded = row.classList.contains('expanded');
+        row.classList.toggle('expanded', !wasExpanded);
+        if (msgEl) msgEl.classList.toggle('expanded', !wasExpanded);
+        row.querySelector('.ctr-age').textContent = wasExpanded
+          ? fmtAge(n.age)
+          : new Date((n.ts || 0) * 1000).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+      });
+      // swipe LEFT on a row to clear just that one - iOS-style reveal.
+      var rsx = 0, rsy = 0, rdx = 0, rarm = false;
+      row.addEventListener('touchstart', function(e){
+        var t = e.touches[0]; rsx = t.clientX; rsy = t.clientY; rdx = 0; rarm = false;
+        row.classList.add('dragging');
+      }, {passive:true});
+      row.addEventListener('touchmove', function(e){
+        var t = e.touches[0], dx = t.clientX - rsx, dy = t.clientY - rsy;
+        if (!rarm && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) rarm = true;
+        if (!rarm) return;
+        rdx = Math.min(0, dx); rowMoved = true;
+        row.style.transform = 'translateX(' + rdx + 'px)';
+      }, {passive:true});
+      row.addEventListener('touchend', function(){
+        row.classList.remove('dragging');
+        if (rdx < -70) {
+          row.style.transform = 'translateX(-100%)';
+          setTimeout(function(){ clearNotif(n.uid); }, 180);
+        } else {
+          row.style.transform = 'translateX(0)';
+        }
+      }, {passive:true});
+      wrap2.appendChild(bg); wrap2.appendChild(row);
+      ctrList.appendChild(wrap2);
+      ctrRows.push(row);
     });
+    if (ctrFocusIdx >= ctrRows.length) ctrFocusIdx = ctrRows.length - 1;
+    if (ctrFocusIdx < 0) ctrFocusIdx = 0;
+    ctrApplyFocus();
   }
 
   function build(n, full){
@@ -1082,7 +1210,7 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
         // on the phone. Count only the ones with no removal and not gone inactive.
         var lc = 0, _it = d.items || [];
         for (var _i = 0; _i < _it.length; _i++)
-          if (!_it[_i].removed_ts && _it[_i].active !== false) lc++;
+          if (!_it[_i].removed_ts && _it[_i].active !== false && !_it[_i].dismissed_ts) lc++;
         statSet(d.linked, lc);
         renderCenter(_it);
         if (!d.items) return;
@@ -1102,8 +1230,9 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
           if (rec && rec.el) {                       // currently on screen
             // a phone-side clear (removed_ts) must NOT retract a toast that is
             // mid-hold - someone across the room may be reading it. Only a
-            // call ending (active:false) pulls its banner.
-            if (n.active === false) dismiss(n.uid);
+            // call ending (active:false), or an explicit "Clear" tapped on
+            // ANY of the displays (dismissed_ts), pulls its banner.
+            if (n.active === false || n.dismissed_ts) dismiss(n.uid);
             else update(n);
             return;
           }
