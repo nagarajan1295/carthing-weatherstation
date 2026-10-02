@@ -539,10 +539,24 @@ def notify():
         return _ancs_cache["d"]
     try:
         with urllib.request.urlopen(ANCS_URL, timeout=3) as r:
-            _ancs_cache["d"] = json.loads(r.read().decode())
+            d = json.loads(r.read().decode())
+        _ancs_cache["d"] = d
+        _ancs_cache["good"], _ancs_cache["good_t"] = d, now
     except Exception as e:
-        _ancs_cache["d"] = {"ok": False, "linked": False, "items": [],
-                            "error": str(e)[:120]}
+        # 2026-10-02: a single failed poll used to be answered with an EMPTY item
+        # list, which the Car Thing's page read as "every notification is gone" and
+        # retracted the pop-up on screen (found live while this Pi's WiFi was
+        # degraded: the swipe-down list worked, the pop-up never showed). Keep
+        # serving the last good feed for up to 2 minutes instead, flagged stale;
+        # only a longer outage reports ok:false (which the page now ignores too).
+        good = _ancs_cache.get("good")
+        if good and now - _ancs_cache.get("good_t", 0) < 120:
+            d = dict(good)
+            d["stale_s"] = int(now - _ancs_cache["good_t"])
+            _ancs_cache["d"] = d
+        else:
+            _ancs_cache["d"] = {"ok": False, "linked": False, "items": [],
+                                "error": str(e)[:120]}
     _ancs_cache["t"] = now
     return _ancs_cache["d"]
 

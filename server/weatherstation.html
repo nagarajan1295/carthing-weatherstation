@@ -1198,11 +1198,40 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
     if (m && n.message && m.textContent !== n.message) m.textContent = n.message;
   }
 
+  // 2026-10-02: robustness against a flaky link (found live on the WeatherThing:
+  // swipe-down list showed the notification, but the pop-up never did).
+  //  - an ok:false/empty reply from the proxy means "could not reach the gateway",
+  //    NOT "no notifications" - acting on it used to retract the toast on screen
+  //    (and the item was then never re-shown), so such replies are now skipped;
+  //  - a toast is only retracted for being absent from the feed after it has been
+  //    missing from 2 consecutive GOOD replies (the hold timer removes it anyway);
+  //  - the toast queue self-heals if `current` ever points at nothing;
+  //  - one bad item can't stop the rest, errors are logged instead of swallowed;
+  //  - polls never overlap (a slow link used to stack parallel ticks).
+  var busy = false, busyAt = 0, failN = 0, lastGood = 0;
+  function healQueue(){
+    if (current !== null) {
+      var rc = seen[current];
+      if (!rc || !rc.el) current = null;
+    }
+    next();
+  }
   function tick(){
+    var nowT = (window.performance && performance.now) ? performance.now() : 0;
+    if (busy && nowT - busyAt < 9000) return;
+    busy = true; busyAt = nowT;
     fetch(URL_, {cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(d){
         if (!d) return;
+        if (d.ok === false) {
+          // gateway unreachable from the proxy: keep everything exactly as it is.
+          // Only after ~15 s of consecutive failures say the phone link is unknown.
+          failN++;
+          if (failN === 6) statSet(false, 0);
+          return;
+        }
+        failN = 0; lastGood = nowT;
         // badge = notifications the phone is STILL showing. The gateway keeps
         // recently-cleared ones in the feed (active:true, removed_ts set) so it
         // can de-dupe and show "recent" - counting the raw list makes the badge
@@ -1220,12 +1249,17 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
         // BirdThing settings screen. Remember everything so nothing replays in
         // a burst when it is switched back on.
         if (CENTRAL && CENTRAL.devices && CENTRAL.devices[DEVICE] === false) {
+          // take down anything currently on screen FIRST - overwriting its record
+          // below would orphan the element (and leave `current` stuck)
+          Object.keys(seen).forEach(function(u){ if (seen[u] && seen[u].el) dismiss(u); });
           d.items.forEach(function(n){ seen[n.uid] = {seeded:true}; markSeen(n.uid); });
           flushSeen();
+          healQueue();
           return;
         }
         d.items.forEach(function(n){ live[n.uid] = n; });
-        d.items.forEach(function(n){
+        healQueue();
+        d.items.forEach(function(n){ try {
           var rec = seen[n.uid];
           if (rec && rec.el) {                       // currently on screen
             // a phone-side clear (removed_ts) must NOT retract a toast that is
@@ -1253,14 +1287,19 @@ function markBrightAuto(){const b=document.getElementById('bAuto');if(b)b.classL
           } else {
             seen[n.uid] = {seeded:true}; markSeen(n.uid);
           }
-        });
+        } catch (ie) { try { console.error('ancs item', ie); } catch(_){} } });
         Object.keys(seen).forEach(function(uid){
-          if (seen[uid].el && !live[uid]) dismiss(uid);
+          var r = seen[uid];
+          if (!r || !r.el) return;
+          if (live[uid]) { r.miss = 0; return; }
+          r.miss = (r.miss || 0) + 1;                // absent from this GOOD reply
+          if (r.miss >= 2) dismiss(uid);
         });
         COLD_START = false;
         flushSeen();
       })
-      .catch(function(){});
+      .catch(function(e){ try { console.error('ancs tick', e); } catch(_){} })
+      .then(function(){ busy = false; });
   }
 
   // ---------------- settings rows, injected into the host's panel ----------
